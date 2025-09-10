@@ -788,7 +788,7 @@ def generate_random_prompt():
         details_str = ", ".join(details_choisis)
 
         random_prompt = f"Mixed Genre ({theme1_str}/{theme2_str}), {composition}, {sujet}, {vetement}, {action}, {lieu}, {details_str}, {ambiance}, {style}."
-
+        return random_prompt, mixed_theme_choice
 
     elif theme == "SF" :
         print("SF")
@@ -809,6 +809,7 @@ def generate_random_prompt():
         # Vous pouvez varier la structure ici
         # random_prompt = f"{composition} d'un(e) {sujet} {vetement}, {action} dans un(e) {lieu}. {details_str}. Ambiance {ambiance}. Style {style}."
         random_prompt = f"Science-fiction, {composition}, {sujet}, {vetement}, {action}, {lieu}, {details_str}, {ambiance}, {style}."
+        return random_prompt, theme
     elif theme == "HF" :
         print("HF")
         sujet = random.choice(sujets_hf)
@@ -828,6 +829,7 @@ def generate_random_prompt():
         # Vous pouvez varier la structure ici
         # random_prompt = f"{composition} d'un(e) {sujet} {vetement}, {action} dans un(e) {lieu}. {details_str}. Ambiance {ambiance}. Style {style}."
         random_prompt = f"Heroic-Fantasy, {composition}, {sujet}, {vetement}, {action}, {lieu}, {details_str}, {ambiance}, {style}."
+        return random_prompt, theme
     elif theme == "NP":
         print("NP")
         sujet = random.choice(sujets_np)
@@ -843,6 +845,7 @@ def generate_random_prompt():
         details_str = ", ".join(details_choisis)
 
         random_prompt = f"Noir/Polar, {composition}, {sujet}, {vetement}, {action}, {lieu}, {details_str}, {ambiance}, {style}."
+        return random_prompt, theme
     elif theme == "HD":
         print("HD")
         sujet = random.choice(sujets_hd)
@@ -858,11 +861,4 @@ def generate_random_prompt():
         details_str = ", ".join(details_choisis)
 
         random_prompt = f"Horreur/Dark Horreur, {composition}, {sujet}, {vetement}, {action}, {lieu}, {details_str}, {ambiance}, {style}."
-
-
-
-    # Ici, vous enverriez prompt_brut à votre LLM pour l'améliorer
-    # prompt_final = appeler_llm(prompt_brut)
-    # return prompt_final
-
-    return random_prompt # Pour l'instant, on retourne le prompt brut
+        return random_prompt, theme
