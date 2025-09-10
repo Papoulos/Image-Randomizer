@@ -385,71 +385,184 @@ def generate_random_prompt():
         "un flic corrompu",
         "un baron du crime",
         "un indic nerveux",
-        "un journaliste d'investigation tenace"
+        "un journaliste d'investigation tenace",
+        "un avocat véreux",
+        "un procureur obsédé par la vérité",
+        "un boxeur déchu reconverti en garde du corps",
+        "un chauffeur de taxi taciturne",
+        "un photographe de crime curieux",
+        "un tueur à gages froid et méthodique",
+        "un pickpocket rusé",
+        "un sénateur compromis dans un scandale",
+        "un vétéran de guerre brisé",
+        "un parrain de la mafia vieillissant",
+        "une chanteuse de jazz mélancolique",
+        "un banquier aux affaires louches",
+        "un flic idéaliste au bord de la chute",
+        "un vagabond qui en sait trop"
     ]
-
+    
     actions_np = [
         "enquêtant sur une disparition mystérieuse",
         "surveillant une ruelle sombre depuis une voiture",
         "interrogeant un suspect sous une lumière blafarde",
         "fuyant des tueurs à gages dans la nuit",
         "découvrant une preuve compromettante",
-        "recevant un pot-de-vin dans un bar enfumé"
+        "recevant un pot-de-vin dans un bar enfumé",
+        "planquant des liasses de billets dans un coffre",
+        "frappant à la porte d’un inconnu sous la pluie",
+        "rédigeant un article explosif dans une salle de rédaction vide",
+        "cachant une arme ensanglantée",
+        "dissimulant un corps dans un coffre de voiture",
+        "suivant une silhouette dans les rues embrumées",
+        "déjouant une embuscade dans une ruelle",
+        "trahissant un allié pour sauver sa peau",
+        "espionnant une conversation téléphonique",
+        "se faisant doubler par un complice",
+        "assistant à un règlement de comptes",
+        "remettant une mallette mystérieuse",
+        "se noyant dans l’alcool dans un bar désert",
+        "recevant un appel anonyme tard dans la nuit"
     ]
-
+    
     lieux_np = [
         "un bureau de détective privé miteux",
         "une ruelle sombre et pluvieuse",
         "un bar de jazz enfumé",
         "un entrepôt désaffecté sur les quais",
         "un appartement de luxe avec un sombre secret",
-        "une morgue froide et silencieuse"
+        "une morgue froide et silencieuse",
+        "un hôtel de passe crasseux",
+        "un parking désert éclairé par un néon",
+        "une salle de boxe décrépite",
+        "un commissariat corrompu",
+        "un casino clandestin",
+        "une salle de rédaction pleine de machines à écrire",
+        "un club sélect fréquenté par la pègre",
+        "une chambre d’hôtel à rideaux tirés",
+        "une station de métro déserte",
+        "un toit de gratte-ciel sous la pluie",
+        "une maison bourgeoise cachant des secrets",
+        "une planque de mafieux",
+        "un tribunal silencieux la nuit",
+        "un cinéma de quartier délabré"
     ]
-
+    
     vetements_np = [
         "un trench-coat et un chapeau fedora",
         "une robe de soirée élégante et un collier de perles",
         "un costume mal ajusté",
         "des vêtements de travail usés",
         "un uniforme de police",
-        "un manteau de fourrure luxueux"
+        "un manteau de fourrure luxueux",
+        "une chemise blanche tachée de sang",
+        "un smoking défraîchi",
+        "un gilet pare-balles dissimulé sous un veston",
+        "un imperméable trempé de pluie",
+        "des talons aiguilles brillants sous un manteau long",
+        "un costume trois-pièces rayé",
+        "une cravate desserrée",
+        "une robe cocktail fendue",
+        "un chapeau cloche élégant",
+        "un pardessus sombre trop grand",
+        "des lunettes de soleil portées la nuit",
+        "un brassard de policier élimé",
+        "des gants en cuir noir",
+        "un foulard taché de rouge à lèvres"
     ]
-
+    
     ambiances_np = [
         "une pluie battante incessante",
         "des ombres profondes et des contrastes élevés",
         "la fumée de cigarette flottant dans l'air",
         "le son lointain d'une sirène de police",
         "une tension palpable",
-        "un sentiment de paranoïa et de méfiance"
+        "un sentiment de paranoïa et de méfiance",
+        "un silence pesant avant une trahison",
+        "un éclairage artificiel trop cru",
+        "une chaleur étouffante dans une pièce sans fenêtre",
+        "une radio grésillant un vieux standard de jazz",
+        "une atmosphère poisseuse et moite",
+        "le bruit régulier d’une goutte d’eau",
+        "des conversations chuchotées dans des recoins sombres",
+        "une ambiance enfumée saturée de whisky",
+        "la lumière blafarde d’un réverbère isolé",
+        "un mélange de désir et de danger",
+        "le tumulte étouffé d’une ville la nuit",
+        "une impression constante d’être suivi",
+        "le claquement régulier d’une machine à écrire",
+        "une tension dramatique prête à exploser"
     ]
-
+    
     compositions_np = [
         "plan rapproché sur un visage anxieux",
         "grand angle sur une ville nocturne",
         "contre-plongée pour accentuer le pouvoir",
         "silhouette se découpant dans un encadrement de porte",
         "reflet dans une flaque d'eau",
-        "angle hollandais pour créer un malaise"
+        "angle hollandais pour créer un malaise",
+        "plan serré sur une main tenant une arme",
+        "champ-contrechamp entre deux personnages en conflit",
+        "ombre projetée sur un mur décrépi",
+        "fenêtre éclairée dans une nuit noire",
+        "vue à travers des stores vénitiens",
+        "focus sur un objet compromettant",
+        "silhouette floue au bout d’une ruelle",
+        "vue en plongée d’un bureau en désordre",
+        "contre-jour dramatique dans la fumée",
+        "panoramique lent sur une scène de crime",
+        "zoom progressif sur un visage inquiet",
+        "plan fixe dans une pièce silencieuse",
+        "cadrage asymétrique renforçant le malaise",
+        "plan séquence suivant un suspect dans la rue"
     ]
-
+    
     details_np = [
         "un verre de whisky posé sur un bureau",
         "un store vénitien projetant des ombres en bandes",
         "un mégot de cigarette écrasé dans un cendrier",
         "une tache de sang sur le trottoir",
         "un néon clignotant à l'extérieur",
-        "une photo en noir et blanc sur un mur"
+        "une photo en noir et blanc sur un mur",
+        "un revolver posé sur une table",
+        "un téléphone à cadran décroché",
+        "une machine à écrire abandonnée",
+        "des billets froissés éparpillés sur le sol",
+        "une paire de menottes entrouvertes",
+        "un briquet gravé avec des initiales",
+        "des bouteilles vides alignées derrière un bar",
+        "une clé rouillée oubliée dans une serrure",
+        "des cartes de jeu éparpillées",
+        "un chapeau tombé dans une flaque",
+        "une lettre froissée tachée de larmes",
+        "des empreintes boueuses menant à une porte",
+        "un miroir fissuré renvoyant un reflet troublant",
+        "un rideau qui se balance dans le courant d’air"
     ]
-
+    
     styles_np = [
-        "style film noir classique (style de Le Faucon Maltais)",
-        "esthétique néo-noir (style de Blade Runner, Sin City)",
+        "style film noir classique (Le Faucon Maltais, Assurance sur la mort)",
+        "esthétique néo-noir (Blade Runner, Sin City, L.A. Confidential)",
         "photographie en noir et blanc à fort contraste",
-        "cinématographie avec beaucoup d'ombres (clair-obscur)",
-        "atmosphère sombre et pessimiste",
-        "réalisme granuleux"
-    ]
+        "cinématographie expressionniste allemande (ombres déformées, clair-obscur)",
+        "atmosphère sombre et pessimiste inspirée de Raymond Chandler",
+        "réalisme granuleux des années 70",
+        "style polar français (Jean-Pierre Melville, Jacques Becker)",
+        "esthétique pulp avec couvertures de magazines illustrées",
+        "noir urbain moderne avec néons et pluie",
+        "composition théâtrale dramatique inspirée du théâtre kabuki",
+        "mise en scène minimaliste et froide",
+        "style graphic novel noir et blanc",
+        "ambiance documentaire des bas-fonds",
+        "influence hitchcockienne, suspense psychologique",
+        "sombres aquarelles évoquant des cauchemars",
+        "style photojournalisme années 50",
+        "images sépia granuleuses d’époque",
+        "atmosphère de thriller paranoïaque",
+        "esthétique cinéma indépendant low-key",
+        "illustration stylisée à l’encre noire"
+    ]    
+
 
 
 # --- Lists Theme: HORREUR/DARK HORREUR ---
@@ -460,71 +573,184 @@ def generate_random_prompt():
         "un cultiste dément",
         "un fantôme vengeur",
         "un savant fou",
-        "une poupée possédée"
+        "une poupée possédée",
+        "un démon aux formes changeantes",
+        "un prêtre défroqué tourmenté",
+        "une mariée spectrale",
+        "un corbeau aux yeux luisants",
+        "un cadavre réanimé",
+        "un fossoyeur sinistre",
+        "une sorcière aux doigts tordus",
+        "un enfant aux yeux vides",
+        "un vampire affamé",
+        "un patient d’asile mutilé",
+        "un chasseur de monstres épuisé",
+        "un parasite extraterrestre",
+        "une nonne démoniaque",
+        "un nécromancien"
     ]
-
+    
     actions_hd = [
         "fuyant une menace invisible dans un couloir sombre",
         "se cachant dans un placard en retenant sa respiration",
         "lisant un grimoire interdit à la lueur d'une bougie",
         "assistant à un rituel blasphématoire",
         "étant traqué par une entité malveillante",
-        "se réveillant dans un lieu inconnu et macabre"
+        "se réveillant dans un lieu inconnu et macabre",
+        "ouvrant lentement une porte grinçante",
+        "regardant fixement un miroir qui déforme le reflet",
+        "hurlant silencieusement sans que personne n’entende",
+        "descendant un escalier vers une cave humide",
+        "creusant une tombe en pleine nuit",
+        "tenant une lanterne vacillante dans la brume",
+        "sacrifiant un animal lors d’une cérémonie occulte",
+        "grattant frénétiquement les murs de pierre",
+        "fuyant dans une forêt plongée dans le brouillard",
+        "écoutant une voix qui chuchote dans sa tête",
+        "ouvrant un cercueil ancien",
+        "brûlant des herbes pour repousser un démon",
+        "s’éveillant avec des cicatrices inexpliquées",
+        "se débattant contre des chaînes rouillées"
     ]
-
+    
     lieux_hd = [
         "un asile abandonné",
         "une maison hantée au sommet d'une colline",
         "une forêt sombre et silencieuse",
         "un cimetière brumeux à minuit",
         "un laboratoire souterrain secret",
-        "une église désacralisée"
+        "une église désacralisée",
+        "un grenier poussiéreux rempli de toiles d’araignée",
+        "un manoir victorien en ruine",
+        "un marais stagnant couvert de brouillard",
+        "une crypte souterraine infestée de rats",
+        "un hôtel délabré au bord de la route",
+        "une cabane isolée dans les bois",
+        "un théâtre abandonné",
+        "un vieux moulin grinçant",
+        "une salle d’opération désaffectée",
+        "un couvent en ruines",
+        "un tunnel de métro désert",
+        "un phare battu par la tempête",
+        "un champ de bataille jonché d’ossements",
+        "un cirque abandonné"
     ]
-
+    
     vetements_hd = [
         "des haillons sales et déchirés",
         "une chemise de nuit blanche tachée de sang",
         "une robe de cérémonie de culte avec des symboles étranges",
         "des bandages recouvrant des blessures horribles",
         "une blouse de médecin souillée",
-        "des vêtements d'enfants démodés"
+        "des vêtements d'enfants démodés",
+        "une cape noire à capuche",
+        "un masque de cuir sanglant",
+        "un uniforme d’asile jauni",
+        "une soutane effilochée",
+        "un manteau trempé de pluie et de boue",
+        "un tablier taché d’organes",
+        "une armure ancienne corrodée",
+        "un costume de clown macabre",
+        "des draps funéraires en lambeaux",
+        "des bottes couvertes de boue et de sang",
+        "un chapelet brisé autour du cou",
+        "un voile de mariée jauni",
+        "une combinaison de patient psychiatrique",
+        "un manteau de fourrure miteux"
     ]
-
+    
     ambiances_hd = [
         "une obscurité quasi totale",
         "un silence de mort oppressant",
         "des murmures incompréhensibles",
         "une sensation d'être observé",
         "une lumière vacillante",
-        "un froid glacial et anormal"
+        "un froid glacial et anormal",
+        "des rires lointains et déformés",
+        "une odeur de chair brûlée",
+        "un brouillard épais et étouffant",
+        "une pluie battante sur un toit en tôle",
+        "des battements de cœur résonnant dans le silence",
+        "un écho constant de pas invisibles",
+        "des grincements incessants",
+        "un souffle glacé dans la nuque",
+        "une distorsion sonore oppressante",
+        "un parfum de fleurs fanées",
+        "le clignotement irrégulier d’une lumière",
+        "une chaleur suffocante et malsaine",
+        "une vibration sourde venue du sol",
+        "un chœur de voix inhumaines"
     ]
-
+    
     compositions_hd = [
         "très gros plan sur un œil terrifié",
         "plan en vue subjective (POV) du monstre",
         "silhouette menaçante se dessinant au loin",
         "cadrage serré dans un espace confiné",
         "plongée sur une victime impuissante",
-        "image déformée comme vue à travers un judas"
+        "image déformée comme vue à travers un judas",
+        "contre-jour d’une figure monstrueuse",
+        "plan fixe sur une porte entrouverte",
+        "caméra tremblante suivant une fuite",
+        "silhouette apparaissant dans un miroir",
+        "plan large d’un paysage désolé",
+        "ombre mouvante projetée sur un mur",
+        "vue en plongée d’un rituel occulte",
+        "composition centrée sur un cercle rituel",
+        "plan séquence à travers un couloir sans fin",
+        "macro sur un objet ensanglanté",
+        "split screen entre victime et bourreau",
+        "plan décentré renforçant le malaise",
+        "vue de dos d’une silhouette immobile",
+        "plan figé sur un visage figé dans l’horreur"
     ]
-
+    
     details_hd = [
         "des rayures sur les murs",
         "des empreintes de pas ensanglantées",
         "une porte qui grince lentement",
         "des jouets d'enfants abandonnés",
         "des symboles occultes dessinés sur le sol",
-        "des ombres qui bougent toutes seules"
+        "des ombres qui bougent toutes seules",
+        "des chandeliers renversés",
+        "des ossements éparpillés",
+        "une horloge arrêtée à minuit",
+        "des chaînes suspendues au plafond",
+        "des miroirs fissurés",
+        "un couteau rouillé planté dans le bois",
+        "des vitraux brisés laissant passer une lueur étrange",
+        "un journal intime taché",
+        "une porte barricadée",
+        "des statues aux visages déformés",
+        "un corbeau empaillé couvert de poussière",
+        "des traces de griffes sur le sol",
+        "un cercueil entrouvert",
+        "des toiles d’araignée épaisses"
+    ]
+    
+    styles_hd = [
+        "horreur gothique (style Dracula, Crimson Peak)",
+        "horreur cosmique (style H.P. Lovecraft)",
+        "body horror (style David Cronenberg, The Thing)",
+        "found footage (style Le Projet Blair Witch, REC)",
+        "horreur psychologique (style The Shining, Hereditary)",
+        "art surréaliste et macabre (style Zdzisław Beksiński)",
+        "slasher des années 80 (style Halloween, Vendredi 13)",
+        "horreur japonaise (style Ringu, Ju-On)",
+        "conte macabre illustré",
+        "film expressionniste allemand (Nosferatu, Le Cabinet du Dr Caligari)",
+        "horreur religieuse (style L’Exorciste, The Nun)",
+        "cinéma gore extrême",
+        "horreur folklorique (style The Witch, Midsommar)",
+        "esthétique VHS rétro",
+        "illustration lovecraftienne à l’encre",
+        "peinture sombre et baroque",
+        "horreur post-apocalyptique",
+        "style cauchemar surréaliste",
+        "esthétique cauchemar urbain (Silent Hill)",
+        "film noir horrifique"
     ]
 
-    styles_hd = [
-        "horreur gothique (style de Dracula de Bram Stoker)",
-        "horreur cosmique (style de H.P. Lovecraft)",
-        "body horror (style de David Cronenberg)",
-        "found footage (style de Le Projet Blair Witch)",
-        "horreur psychologique (style de The Shining)",
-        "art surréaliste et macabre (style de Zdzisław Beksiński)"
-    ]
 
 
     Themes = [ "SF","HF", "NP", "HD" ]
