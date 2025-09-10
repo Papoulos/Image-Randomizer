@@ -192,90 +192,189 @@ def generate_random_prompt():
 # Lists for generating fantasy and science-fantasy prompts
 
     sujets_hf = [
-        "A mystical dragon", "An ancient sorcerer", "A cybernetic knight", "A rogue assassin",
-        "A wise old sage", "A futuristic bounty hunter", "A dark elf", "A noble paladin",
-        "A steampunk inventor", "A ghostly apparition", "A celestial being", "A shadowy figure",
-        "A time-traveling adventurer", "A cursed warrior", "A mystic seer", "A fallen angel",
-        "A bio-engineered creature", "A holographic entity", "A sentient robot", "A vampire lord"
+        "a mystical dragon",
+        "an ancient sorcerer",
+        "a noble paladin",
+        "a shadowy assassin",
+        "a wise old sage",
+        "a cursed knight",
+        "a dark elf warlord",
+        "a wandering bard",
+        "a fierce barbarian",
+        "a high priestess",
+        "a forest druid",
+        "a goblin chieftain",
+        "a fallen angel",
+        "a royal heir in exile",
+        "a necromancer",
+        "a dwarven king",
+        "a battle-hardened ranger",
+        "a witch-queen",
+        "a beastmaster with his companion",
+        "a lone adventurer"
     ]
-
+    
     actions_hf = [
-        "Casting a powerful spell", "Wielding a legendary sword", "Flying through the sky",
-        "Sneaking through shadows", "Summoning a magical creature", "Fighting a horde of enemies",
-        "Exploring an ancient ruin", "Riding a mythical beast", "Inventing a magical device",
-        "Performing a dark ritual", "Guarding a sacred artifact", "Traveling through time",
-        "Battling a fierce dragon", "Channeling cosmic energy", "Uncovering a hidden secret",
-        "Leading an army into battle", "Confronting a powerful foe", "Healing a wounded ally",
-        "Seeking ancient knowledge", "Protecting a vulnerable village"
+        "casting a powerful incantation of fire",
+        "wielding an enchanted sword against foes",
+        "summoning a creature from another plane",
+        "sneaking silently through torchlit corridors",
+        "performing a forbidden ritual under moonlight",
+        "leading soldiers into a desperate battle",
+        "exploring ancient, crumbling ruins",
+        "riding a mighty griffon through the skies",
+        "calling upon ancestral spirits for aid",
+        "dueling a rival in a sacred arena",
+        "healing the wounded with divine magic",
+        "searching for a legendary artifact",
+        "confronting a monstrous guardian",
+        "protecting a sacred grove from invaders",
+        "marching across a battlefield of corpses",
+        "deciphering glowing, cryptic runes",
+        "kneeling before a godlike apparition",
+        "drinking from a cursed chalice",
+        "commanding undead legions from a dark citadel",
+        "whispering secrets to demonic forces"
     ]
-
+    
     lieux_hf = [
-        "A dense, enchanted forest", "A towering, ancient castle", "A futuristic, neon-lit city",
-        "A haunted, abandoned mansion", "A vast, otherworldly landscape", "A bustling, steampunk market",
-        "A serene, mystical lake", "A dark, underground cavern", "A floating, sky island",
-        "A post-apocalyptic wasteland", "A hidden, elven sanctuary", "A grand, gothic cathedral",
-        "A lush, alien jungle", "A frozen, icy tundra", "A mystical, crystal cave",
-        "A war-torn battlefield", "A tranquil, hidden grove", "A bustling, space station",
-        "A eerie, ghostly graveyard", "A majestic, mountain peak"
+        "a dense, enchanted forest filled with whispers",
+        "a towering, ancient castle shrouded in fog",
+        "a vast battlefield littered with bones",
+        "a hidden elven sanctuary in twilight",
+        "a grand, gothic cathedral of forgotten gods",
+        "a misty mountain pass above the clouds",
+        "a mystical crystal cavern glowing faintly",
+        "a dark, underground dwarven fortress",
+        "a haunted graveyard under a blood moon",
+        "a sacred druidic stone circle",
+        "a storm-lashed cliff overlooking the sea",
+        "a royal throne room illuminated by torches",
+        "a cursed swamp with twisted trees",
+        "a ruined temple swallowed by the jungle",
+        "a frozen tundra under aurora skies",
+        "a labyrinthine dungeon carved in stone",
+        "a fiery volcanic wasteland",
+        "a sunlit meadow hiding ancient ruins",
+        "a war-torn village reduced to ashes",
+        "a mystical floating island drifting in clouds"
     ]
-
+    
     vetements_hf = [
-        "Ornate, magical robes", "Futuristic, cybernetic armor", "Dark, leather assassin gear",
-        "Elegant, elven attire", "Heavy, plate mail armor", "Mystical, rune-covered cloak",
-        "Steampunk, goggle-adorned outfit", "Gothic, Victorian-era dress", "Ancient, ritualistic garb",
-        "Light, ethereal fabric", "Shadowy, hooded cloak", "Bio-luminescent suit", "Holographic clothing",
-        "Battle-scarred armor", "Ceremonial, royal regalia", "Time-traveler's eclectic outfit",
-        "Cursed, enchanted armor", "Noble, knightly attire", "Alien, exosuit", "Vampiric, elegant wear"
+        "ornate robes embroidered with glowing runes",
+        "battle-scarred plate armor bearing heraldic sigils",
+        "dark leather assassin garb with hidden daggers",
+        "elegant elven attire woven with silver thread",
+        "a hooded cloak concealing a scarred face",
+        "mystical robes lined with golden trim",
+        "ceremonial regalia of a forgotten cult",
+        "a suit of dwarven-forged armor covered in soot",
+        "a ragged cloak stitched with charms and bones",
+        "simple monk’s robes of coarse fabric",
+        "gleaming armor polished for royal ceremonies",
+        "tattered garments soaked in dried blood",
+        "fur-lined leathers suited for frozen tundras",
+        "robes of a necromancer adorned with skulls",
+        "a crown set with cracked gemstones",
+        "an enchanted chainmail shirt that glows faintly",
+        "leather armor reinforced with dragon scales",
+        "a druid’s outfit covered in living vines",
+        "noble garments decorated with golden embroidery",
+        "a witch’s wide-brimmed hat and shadowy cloak"
     ]
-
+    
     ambiances_hf = [
-        "Mystical and ethereal", "Dark and foreboding", "Futuristic and sleek", "Ancient and timeless",
-        "Eerie and haunting", "Vibrant and otherworldly", "Gothic and moody", "Heroic and inspiring",
-        "Melancholic and somber", "Chaotic and intense", "Serene and tranquil", "Majestic and awe-inspiring",
-        "Apocalyptic and desolate", "Whimsical and playful", "Dramatic and tense", "Enchanting and magical",
-        "Cybernetic and cold", "Mysterious and intriguing", "Grand and epic", "Shadowy and ominous"
+        "mystical and ethereal moonlight",
+        "dark and foreboding shadows",
+        "ancient, timeless atmosphere heavy with secrets",
+        "eerie and haunting silence broken by whispers",
+        "vibrant and otherworldly magical glow",
+        "gothic and moody candlelight",
+        "heroic and inspiring, bathed in sunlight",
+        "melancholic and somber twilight skies",
+        "chaotic and intense battlefield tension",
+        "serene and tranquil pastoral setting",
+        "majestic and awe-inspiring divine presence",
+        "apocalyptic and desolate wastelands",
+        "whimsical and enchanted woodland charm",
+        "dramatic and tense standoff",
+        "shadowy and ominous corridors",
+        "mysterious and intriguing ruins",
+        "grand and epic landscapes of mountains and castles",
+        "fiery and destructive volcanic light",
+        "sacred and solemn holy ground",
+        "unsettling silence before an ambush"
     ]
-
+    
     compositions_hf = [
-        "Close-up portrait", "Wide, sweeping landscape", "Bird's-eye view", "Dramatic silhouette",
-        "Symmetrical and balanced", "Dynamic and action-packed", "Isolated and focused", "Crowded and chaotic",
-        "Low-angle, heroic shot", "High-angle, diminishing perspective", "Dutch angle, disorienting",
-        "Rule of thirds composition", "Leading lines drawing focus", "Frame within a frame",
-        "Natural framing with environment", "Deep space with atmospheric effects",
-        "Shallow depth of field, subject focus", "Panoramic and expansive", "Intimate and personal",
-        "Monumental and grand"
+        "close-up portrait with intense expression",
+        "wide, sweeping landscape view",
+        "low-angle heroic shot emphasizing power",
+        "dramatic silhouette against glowing skies",
+        "symmetrical framing with divine balance",
+        "dynamic action pose mid-battle",
+        "crowded and chaotic battle composition",
+        "isolated lone figure in vast wilderness",
+        "high-angle diminishing perspective",
+        "rule of thirds for dramatic balance",
+        "natural framing with branches or ruins",
+        "deep atmospheric perspective through mist",
+        "shallow depth of field on mystical symbols",
+        "panoramic mountain range with castles",
+        "intimate close-up of spellcasting hands",
+        "monumental scale with towering structures",
+        "framed through archways or ruins",
+        "bird’s-eye view over battlefield",
+        "intense duel in focused foreground",
+        "grand tableau with multiple characters posed"
     ]
-
+    
     details_hf = [
-        "floating crystal shards shimmering nearby",
-        "glowing arcane runes carved into walls or stones",
-        "patches of strange bioluminescent fungi on surfaces",
-        "wisps of spectral energy drifting through the air",
-        "scattered, broken mechanical parts on the ground",
-        "a small, hovering, silent observation drone",
-        "puddles of iridescent, unidentifiable liquid",
-        "glowing cracks in the ground revealing energy/lava",
-        "ancient, weathered carvings on nearby pillars",
-        "swirling motes of magical dust in the light",
-        "a flickering, damaged holographic advertisement",
-        "thick, metallic vines snaking across structures",
-        "a small pile of bleached, unidentified bones",
-        "sparking, exposed power conduits arcing occasionally",
-        "intricate, floating geometric energy patterns",
-        "a shimmering heat haze distorting the background",
-        "clumps of rare, unusually colored exotic flowers",
-        "mysterious glowing symbols painted on surfaces",
-        "a small, unattended bubbling cauldron or beaker",
-        "discarded, faintly glowing energy cells littered about"
+        "floating crystal shards glowing faintly",
+        "glowing arcane runes etched into stone",
+        "patches of luminescent fungi on walls",
+        "wisps of spectral energy drifting slowly",
+        "ancient banners torn and fluttering",
+        "a sword embedded in cracked earth",
+        "a chalice spilling glowing liquid",
+        "a shattered crown lying forgotten",
+        "carved statues eroded by time",
+        "motes of magical dust drifting in air",
+        "a burning brazier casting long shadows",
+        "shattered shields and rusted weapons",
+        "a pool reflecting eerie moonlight",
+        "vines entangling old ruins",
+        "skulls arranged in ritual patterns",
+        "a grimoire open on a pedestal",
+        "a spectral animal companion lurking nearby",
+        "storm clouds swirling ominously overhead",
+        "a shattered stained-glass window glowing faintly",
+        "a circle of candles flickering in the wind"
+    ]
+    
+    styles_hf = [
+        "dark, gothic fantasy (style of Dark Souls, Diablo)",
+        "high fantasy epic (style of The Lord of the Rings)",
+        "grimdark medieval realism (style of The Witcher)",
+        "mythological and heroic (style of ancient epics)",
+        "romantic fantasy painting (style of John William Waterhouse)",
+        "ethereal and dreamlike illustration",
+        "baroque and ornate fantasy art",
+        "folkloric fairy-tale atmosphere",
+        "epic fantasy concept art",
+        "whimsical and enchanted storybook",
+        "sword-and-sorcery pulp aesthetic",
+        "renaissance-inspired high fantasy painting",
+        "dark ritualistic horror",
+        "majestic divine grandeur",
+        "expressionistic fantasy art",
+        "celestial and angelic themes",
+        "arcane and mysterious symbolism",
+        "battlefield fantasy realism",
+        "storybook illustration with bright palettes",
+        "otherworldly surrealist fantasy"
     ]
 
-    styles_hf = [
-        "Dark fantasy", "Cyberpunk", "Steampunk", "High fantasy", "Gothic horror", "Science fantasy",
-        "Mythological", "Post-apocalyptic", "Ethereal and dreamlike", "Heroic and epic",
-        "Mystical and enchanting", "Dystopian and grim", "Alien and otherworldly", "Ancient and mystical",
-        "Futuristic and sleek", "Shadowy and ominous", "Vibrant and whimsical", "Melancholic and somber",
-        "Grand and majestic", "Eerie and haunting"
-    ]
 
     Themes = [ "SF","HF" ]
 
