@@ -753,11 +753,44 @@ def generate_random_prompt():
 
 
 
-    Themes = [ "SF","HF", "NP", "HD" ]
+    Themes = [ "SF","HF", "NP", "HD", "Mixed" ]
+    Mixed_Themes = ["SF-NP", "HF-HD", "SF-HD"]
 
     theme = random.choice(Themes)
 
-    if theme == "SF" :
+    if theme == "Mixed":
+        mixed_theme_choice = random.choice(Mixed_Themes)
+        theme1_str, theme2_str = mixed_theme_choice.split('-')
+
+        print(f"Mixed Theme: {theme1_str}-{theme2_str}")
+
+        theme_map = {
+            "SF": (sujets_sf, actions_sf, lieux_sf, vetements_sf, ambiances_sf, compositions_sf, details_sf, styles_sf),
+            "HF": (sujets_hf, actions_hf, lieux_hf, vetements_hf, ambiances_hf, compositions_hf, details_hf, styles_hf),
+            "NP": (sujets_np, actions_np, lieux_np, vetements_np, ambiances_np, compositions_np, details_np, styles_np),
+            "HD": (sujets_hd, actions_hd, lieux_hd, vetements_hd, ambiances_hd, compositions_hd, details_hd, styles_hd),
+        }
+
+        theme1_lists = theme_map[theme1_str]
+        theme2_lists = theme_map[theme2_str]
+
+        sujet = random.choice(random.choice([theme1_lists[0], theme2_lists[0]]))
+        action = random.choice(random.choice([theme1_lists[1], theme2_lists[1]]))
+        lieu = random.choice(random.choice([theme1_lists[2], theme2_lists[2]]))
+        vetement = random.choice(random.choice([theme1_lists[3], theme2_lists[3]]))
+        ambiance = random.choice(random.choice([theme1_lists[4], theme2_lists[4]]))
+        composition = random.choice(random.choice([theme1_lists[5], theme2_lists[5]]))
+        style = random.choice(random.choice([theme1_lists[7], theme2_lists[7]]))
+
+        details_list = random.choice([theme1_lists[6], theme2_lists[6]])
+        nb_details = random.randint(2, 3)
+        details_choisis = random.sample(details_list, nb_details)
+        details_str = ", ".join(details_choisis)
+
+        random_prompt = f"Mixed Genre ({theme1_str}/{theme2_str}), {composition}, {sujet}, {vetement}, {action}, {lieu}, {details_str}, {ambiance}, {style}."
+
+
+    elif theme == "SF" :
         print("SF")
         sujet = random.choice(sujets_sf)
         action = random.choice(actions_sf)
