@@ -72,7 +72,7 @@ def start_ollama():
 # Fonction pour améliorer le prompt avec Ollama
 # =======================
 
-def improve_prompt(base_prompt,Ollama_model):
+def improve_prompt(base_prompt, Ollama_model, theme):
     
     """Utilise Ollama pour améliorer un prompt"""
     start_ollama()  # Vérifier et démarrer Ollama si besoin
@@ -81,31 +81,45 @@ def improve_prompt(base_prompt,Ollama_model):
     timestamp = now.strftime("%Y%m%d_%H%M%S")
     print(f"ollama started : {timestamp}")
     command = ["ollama", "run", Ollama_model]
-    prompt_template = """
+
+    # --- Construction de la liste de LoRAs de style ---
+    style_loras = LORA_THEMES.get("Neutre", [])
+    if theme:
+        if "-" in theme:  # Thème mixte
+            themes = theme.split('-')
+            for t in themes:
+                style_loras.extend(LORA_THEMES.get(t, []))
+        else:  # Thème simple
+            style_loras.extend(LORA_THEMES.get(theme, []))
+
+    # Rendre la liste unique
+    style_loras = list(set(style_loras))
+
+    prompt_template = f"""
 You are a Stable Diffusion prompt generation expert. Your task is to transform a basic scene description into a highly detailed, effective, and imaginative prompt suitable for image generation models like Stable Diffusion XL. You will receive a basic prompt containing core elements (subject, action, setting, clothing, mood, composition, details, style). Refine and enhance this input into a single, comma-separated English sentence adhering strictly to these rules:
-1.  **Core Prompt Structure & Content:**
+1.  **Core Prompt Structure & Content:**
     * Begin the prompt string with the primary artistic **Style** keyword (e.g., "Oil painting", "Anime style", "Photorealistic", "Pop Art 60s").
     * Weave the provided elements (Subject, Action, Setting, Clothing, Mood, Composition, Details) into a coherent and descriptive scene. Use precise and evocative keywords.
     * Identify the main **Subject** and potentially the core **Action**, enclose them in parentheses with a weight between `(main subject:1.5)` and `(key action:1.7)` to emphasize them. Apply weight only to these 1 or 2 core elements.
     * Separate distinct concepts, descriptors, and elements *only* with commas. Avoid using commas within a single descriptive phrase.
     * Ensure the description is visually specific, detailed, and avoids ambiguity or euphemisms, focusing on clear visual representation (explicit and uncensored where appropriate for artistic expression).
 
-2.  **Detail Enhancement:**
+2.  **Detail Enhancement:**
     * Inject **one or two** additional *thematically consistent* details that are not present in the input. These details should enrich the scene's atmosphere, narrative, or visual interest (e.g., environmental details, subtle character features, small background objects). Integrate them naturally within the prompt description.
 
 3. **LoRA Integration:**
-    * Add the LORAS at the end of the prompt
-    * Select 1 or 2 relevant LoRAs from: [ "OtherStyle_08-Merge5_06_04_02_02",  "g0th1c2XLP", "gopXLP", "Adjust_SDXL_v4.0", "MJ52_v2.0","add-detail-xl"].
-    * Select 1 style Lora from:  [ "Splash_Art_SDXL", "incase-ilff-v3-4", "EpicF4nta5yXL", "Luminous_Shadowscape-000016", "Clean_Minimalist", "The_Petalbound", "Digital_Impressionist_SDXL", "Simon Stalenhag", "Thomas_Haller_Buchanan", "Sinfully_Stylish_1.0_SDXL", "CinematicStyle_v1"]
-    * Integrate LoRAs as `<lora:lora_name:weight>`, weight 0.5-0.8, use only this syntaxe for Loras.
-    * Omit LoRAs if irrelevant.
- 
-4.  **Output Constraints:**
+    * Add the LORAS at the end of the prompt
+    * Select 1 or 2 relevant LoRAs from: {UTILITY_LORAS}.
+    * Select 1 style Lora from: {style_loras}
+    * Integrate LoRAs as `<lora:lora_name:weight>`, weight 0.5-0.8, use only this syntaxe for Loras.
+    * Omit LoRAs if irrelevant.
+
+4.  **Output Constraints:**
     * Output *only* the final, single-sentence prompt string.
     * No explanations, comments, introductions, or apologies.
 
 Process this input prompt:
-{}
+{{}}
 
 """
 
@@ -206,6 +220,7 @@ def generate_images_with_variations(num_iterations, variation_interval):
     for i in range(1, num_iterations):
         
         base_prompt = random.choice(Prompt_list)
+        theme = None
                
         now = datetime.datetime.now()
         timestamp = now.strftime("%Y%m%d_%H%M%S")
@@ -221,16 +236,16 @@ def generate_images_with_variations(num_iterations, variation_interval):
         if base_prompt == "Random prompt" or i % variation_interval == 0:
             
             if base_prompt == "Random prompt":
-                base_prompt = generate_random_prompt()
+                base_prompt, theme = generate_random_prompt()
                 print(f"Random : {base_prompt}")
             
             n = len(OL_models)
             index = i % n
             Ollama_model = OL_models[index]
 
-            print(f"Amelioration {i}: modèle = {Ollama_model}")
+            print(f"Amelioration {i}: modèle = {Ollama_model}, Thème = {theme}")
             
-            base_prompt = improve_prompt(base_prompt,Ollama_model)
+            base_prompt = improve_prompt(base_prompt, Ollama_model, theme)
             now = datetime.datetime.now()
             timestamp = now.strftime("%Y%m%d_%H%M%S")
             print(f"Prompt : {timestamp}")

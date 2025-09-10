@@ -27,3 +27,39 @@ TIMEOUT = 60  # Temps maximum en secondes avant de relancer tout
 
 # Répertoire de sauvegarde
 SAVE_DIR = "G:\\LLM\\outputs\\"
+
+# LORAs
+UTILITY_LORAS = [
+    "OtherStyle_08-Merge5_06_04_02_02",
+    "g0th1c2XLP",
+    "gopXLP",
+    "Adjust_SDXL_v4.0",
+    "MJ52_v2.0",
+    "add-detail-xl"
+]
+
+LORA_THEMES = {
+    "Neutre": [
+        "Splash_Art_SDXL",
+        "ncase-ilff-v3-4",
+        "Luminous_Shadowscape-000016",
+        "Clean_Minimalist",
+        "Digital_Impressionist_SDXL",
+        "CinematicStyle_v1"
+    ],
+    "SF": [
+        "Simon Stalenhag",
+        "The_Petalbound"
+    ],
+    "HF": [
+        "EpicF4nta5yXL"
+    ],
+    "NP": [
+        "Thomas_Haller_Buchanan",
+        "Simon Stalenhag",
+        "The_Petalbound"
+    ],
+    "HD": [
+        "Sinfully_Stylish_1.0_SDXL"
+    ]
+}
