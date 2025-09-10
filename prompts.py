@@ -376,7 +376,158 @@ def generate_random_prompt():
     ]
 
 
-    Themes = [ "SF","HF" ]
+
+# --- Lists Theme: NOIR/POLAR ---
+
+    sujets_np = [
+        "un détective privé cynique",
+        "une femme fatale énigmatique",
+        "un flic corrompu",
+        "un baron du crime",
+        "un indic nerveux",
+        "un journaliste d'investigation tenace"
+    ]
+
+    actions_np = [
+        "enquêtant sur une disparition mystérieuse",
+        "surveillant une ruelle sombre depuis une voiture",
+        "interrogeant un suspect sous une lumière blafarde",
+        "fuyant des tueurs à gages dans la nuit",
+        "découvrant une preuve compromettante",
+        "recevant un pot-de-vin dans un bar enfumé"
+    ]
+
+    lieux_np = [
+        "un bureau de détective privé miteux",
+        "une ruelle sombre et pluvieuse",
+        "un bar de jazz enfumé",
+        "un entrepôt désaffecté sur les quais",
+        "un appartement de luxe avec un sombre secret",
+        "une morgue froide et silencieuse"
+    ]
+
+    vetements_np = [
+        "un trench-coat et un chapeau fedora",
+        "une robe de soirée élégante et un collier de perles",
+        "un costume mal ajusté",
+        "des vêtements de travail usés",
+        "un uniforme de police",
+        "un manteau de fourrure luxueux"
+    ]
+
+    ambiances_np = [
+        "une pluie battante incessante",
+        "des ombres profondes et des contrastes élevés",
+        "la fumée de cigarette flottant dans l'air",
+        "le son lointain d'une sirène de police",
+        "une tension palpable",
+        "un sentiment de paranoïa et de méfiance"
+    ]
+
+    compositions_np = [
+        "plan rapproché sur un visage anxieux",
+        "grand angle sur une ville nocturne",
+        "contre-plongée pour accentuer le pouvoir",
+        "silhouette se découpant dans un encadrement de porte",
+        "reflet dans une flaque d'eau",
+        "angle hollandais pour créer un malaise"
+    ]
+
+    details_np = [
+        "un verre de whisky posé sur un bureau",
+        "un store vénitien projetant des ombres en bandes",
+        "un mégot de cigarette écrasé dans un cendrier",
+        "une tache de sang sur le trottoir",
+        "un néon clignotant à l'extérieur",
+        "une photo en noir et blanc sur un mur"
+    ]
+
+    styles_np = [
+        "style film noir classique (style de Le Faucon Maltais)",
+        "esthétique néo-noir (style de Blade Runner, Sin City)",
+        "photographie en noir et blanc à fort contraste",
+        "cinématographie avec beaucoup d'ombres (clair-obscur)",
+        "atmosphère sombre et pessimiste",
+        "réalisme granuleux"
+    ]
+
+
+# --- Lists Theme: HORREUR/DARK HORREUR ---
+
+    sujets_hd = [
+        "une créature cauchemardesque",
+        "un survivant terrifié",
+        "un cultiste dément",
+        "un fantôme vengeur",
+        "un savant fou",
+        "une poupée possédée"
+    ]
+
+    actions_hd = [
+        "fuyant une menace invisible dans un couloir sombre",
+        "se cachant dans un placard en retenant sa respiration",
+        "lisant un grimoire interdit à la lueur d'une bougie",
+        "assistant à un rituel blasphématoire",
+        "étant traqué par une entité malveillante",
+        "se réveillant dans un lieu inconnu et macabre"
+    ]
+
+    lieux_hd = [
+        "un asile abandonné",
+        "une maison hantée au sommet d'une colline",
+        "une forêt sombre et silencieuse",
+        "un cimetière brumeux à minuit",
+        "un laboratoire souterrain secret",
+        "une église désacralisée"
+    ]
+
+    vetements_hd = [
+        "des haillons sales et déchirés",
+        "une chemise de nuit blanche tachée de sang",
+        "une robe de cérémonie de culte avec des symboles étranges",
+        "des bandages recouvrant des blessures horribles",
+        "une blouse de médecin souillée",
+        "des vêtements d'enfants démodés"
+    ]
+
+    ambiances_hd = [
+        "une obscurité quasi totale",
+        "un silence de mort oppressant",
+        "des murmures incompréhensibles",
+        "une sensation d'être observé",
+        "une lumière vacillante",
+        "un froid glacial et anormal"
+    ]
+
+    compositions_hd = [
+        "très gros plan sur un œil terrifié",
+        "plan en vue subjective (POV) du monstre",
+        "silhouette menaçante se dessinant au loin",
+        "cadrage serré dans un espace confiné",
+        "plongée sur une victime impuissante",
+        "image déformée comme vue à travers un judas"
+    ]
+
+    details_hd = [
+        "des rayures sur les murs",
+        "des empreintes de pas ensanglantées",
+        "une porte qui grince lentement",
+        "des jouets d'enfants abandonnés",
+        "des symboles occultes dessinés sur le sol",
+        "des ombres qui bougent toutes seules"
+    ]
+
+    styles_hd = [
+        "horreur gothique (style de Dracula de Bram Stoker)",
+        "horreur cosmique (style de H.P. Lovecraft)",
+        "body horror (style de David Cronenberg)",
+        "found footage (style de Le Projet Blair Witch)",
+        "horreur psychologique (style de The Shining)",
+        "art surréaliste et macabre (style de Zdzisław Beksiński)"
+    ]
+
+
+    Themes = [ "SF","HF", "NP", "HD" ]
 
     theme = random.choice(Themes)
 
@@ -418,6 +569,36 @@ def generate_random_prompt():
         # Vous pouvez varier la structure ici
         # random_prompt = f"{composition} d'un(e) {sujet} {vetement}, {action} dans un(e) {lieu}. {details_str}. Ambiance {ambiance}. Style {style}."
         random_prompt = f"Heroic-Fantasy, {composition}, {sujet}, {vetement}, {action}, {lieu}, {details_str}, {ambiance}, {style}."
+    elif theme == "NP":
+        print("NP")
+        sujet = random.choice(sujets_np)
+        action = random.choice(actions_np)
+        lieu = random.choice(lieux_np)
+        vetement = random.choice(vetements_np)
+        ambiance = random.choice(ambiances_np)
+        composition = random.choice(compositions_np)
+        style = random.choice(styles_np)
+
+        nb_details = random.randint(2, 3)
+        details_choisis = random.sample(details_np, nb_details)
+        details_str = ", ".join(details_choisis)
+
+        random_prompt = f"Noir/Polar, {composition}, {sujet}, {vetement}, {action}, {lieu}, {details_str}, {ambiance}, {style}."
+    elif theme == "HD":
+        print("HD")
+        sujet = random.choice(sujets_hd)
+        action = random.choice(actions_hd)
+        lieu = random.choice(lieux_hd)
+        vetement = random.choice(vetements_hd)
+        ambiance = random.choice(ambiances_hd)
+        composition = random.choice(compositions_hd)
+        style = random.choice(styles_hd)
+
+        nb_details = random.randint(2, 3)
+        details_choisis = random.sample(details_hd, nb_details)
+        details_str = ", ".join(details_choisis)
+
+        random_prompt = f"Horreur/Dark Horreur, {composition}, {sujet}, {vetement}, {action}, {lieu}, {details_str}, {ambiance}, {style}."
 
 
 
