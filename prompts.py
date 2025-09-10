@@ -50,29 +50,29 @@ def generate_random_prompt():
     ]
 
     lieux_sf = [
-        "the derelict bridge of a ghost starship, alarms dead",
-        "a rain-slicked, garbage-filled alley in a cyberpunk megalopolis",
-        "an abandoned orbital station venting atmosphere slowly",
-        "a toxic alien jungle where plants actively hunt",
-        "the decaying, labyrinthine interior of a planet-sized supercomputer",
-        "a poorly lit, overcrowded mining colony on a desolate moon",
-        "a clandestine bio-engineering lab filled with failed experiments",
-        "the ruins of a city destroyed by advanced weaponry",
-        "a black market bazaar hidden deep within a space hulk",
-        "the cold, humming core of a Doomsday machine",
-        "an underwater research facility compromised by alien pressure",
-        "a glitching, nightmarish landscape within virtual reality",
-        "a graveyard of decommissioned, rusting war machines",
-        "a cryo-storage facility where occupants have mutated",
-        "a resource-stripped desert planet under a sickly sun",
-        "the oppressive, bio-mechanical interior of an alien vessel",
-        "a quarantine zone surrounding an extraterrestrial plague outbreak",
-        "a heavily fortified corporate arcology casting long shadows",
-        "an impossible alien city built with disturbing geometry",
-        "the eerie, silent void near a black hole's event horizon"
+        "bridge of a ghost starship",
+        "alley in a cyberpunk megalopolis",
+        "orbital station",
+        "toxic alien jungle",
+        "interior of a planet-sized supercomputer",
+        "mining colony on a desolate moon",
+        "bio-engineering lab",
+        "ruins of a city",
+        "black market bazaar in a space hulk",
+        "core of a Doomsday machine",
+        "underwater research facility",
+        "landscape within virtual reality",
+        "graveyard of war machines",
+        "cryo-storage facility",
+        "desert planet",
+        "interior of an alien vessel",
+        "quarantine zone",
+        "corporate arcology",
+        "alien city",
+        "the void near a black hole's event horizon"
     ]
 
-    ambiances_sf = [
+    vetements_sf = [
         "a sleek, black environmental suit, subtly damaged",
         "a heavy combat exoskeleton stained with alien ichor",
         "crude, visible cybernetic limbs sparking intermittently",
@@ -95,7 +95,7 @@ def generate_random_prompt():
         "bio-luminescent symbiotic plating fused to the skin"
     ]
 
-    atmosphere_sf = [
+    ambiances_sf = [
         "cold, sterile fluorescent lighting casting harsh shadows",
         "flickering emergency lights bathing corridors in red",
         "the oppressive silence of a vacuum or dead station",
@@ -119,26 +119,26 @@ def generate_random_prompt():
     ]
 
     compositions_sf = [
-        "extreme close-up on a frantic, cybernetic eye",
-        "desolate wide shot of a lone figure against industrial ruins",
-        "imposing low angle shot emphasizing oppressive architecture",
-        "claustrophobic centered shot within a cramped cockpit",
-        "over-the-shoulder shot revealing a screen full of errors",
-        "disorienting dutch angle during a system failure or attack",
-        "symmetrical shot down a long, empty, decaying corridor",
-        "erratic tracking shot following someone running in fear",
-        "fisheye lens perspective from a damaged security camera",
-        "isolating long shot showing vulnerability against vast machinery",
-        "split diopter focusing on a weapon and a terrified face",
-        "oppressive high angle looking down into slums or work pits",
-        "shaky first-person POV from inside a damaged helmet",
-        "rule of thirds placing a character against a dangerous void",
-        "ominous rack focus from a dripping pipe to a shadowy figure",
-        "stark silhouette against a burning cityscape or explosion",
-        "uncomfortably tight framing leaving little breathing room",
-        "detailed macro shot of malfunctioning, sparking circuitry",
-        "worm's-eye view of towering, hostile alien structures",
-        "cinematic widescreen showing isolation in a vast, dead space"
+        "extreme close-up",
+        "wide shot",
+        "low angle shot",
+        "centered shot",
+        "over-the-shoulder shot",
+        "dutch angle",
+        "symmetrical shot",
+        "tracking shot",
+        "fisheye lens",
+        "long shot",
+        "split diopter",
+        "high angle",
+        "first-person POV",
+        "rule of thirds",
+        "rack focus",
+        "silhouette",
+        "tight framing",
+        "macro shot",
+        "worm's-eye view",
+        "cinematic widescreen"
     ]
 
     details_sf = [
@@ -286,7 +286,7 @@ def generate_random_prompt():
         sujet = random.choice(sujets_sf)
         action = random.choice(actions_sf)
         lieu = random.choice(lieux_sf)
-        atmosphere = random.choice(atmosphere_sf)
+        vetement = random.choice(vetements_sf)
         ambiance = random.choice(ambiances_sf)
         composition = random.choice(compositions_sf)
         style = random.choice(styles_sf)
@@ -299,7 +299,7 @@ def generate_random_prompt():
         # Assembler le prompt brut
         # Vous pouvez varier la structure ici
         # random_prompt = f"{composition} d'un(e) {sujet} {vetement}, {action} dans un(e) {lieu}. {details_str}. Ambiance {ambiance}. Style {style}."
-        random_prompt = f"Science-fiction, {composition}, {sujet}, {action}, {lieu}, {details_str}, {atmosphere}, {ambiance}, {style}."
+        random_prompt = f"Science-fiction, {composition}, {sujet}, {vetement}, {action}, {lieu}, {details_str}, {ambiance}, {style}."
     elif theme == "HF" :
         print("HF")
         sujet = random.choice(sujets_hf)
