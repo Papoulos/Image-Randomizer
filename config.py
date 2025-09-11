@@ -2,18 +2,31 @@
 # Paramètres modifiables
 # =======================
 
-# Paramètres de génération d'image
-steps = 30  # Nombre d'étapes pour la génération de l'image
-width = 1024  # Largeur de l'image
-height = 1024  # Hauteur de l'image
-cfg_scale = "7"
-sampler_name = "DPM++ 2M"
-scheduler = "karras"
+# Configurations de génération d'images
+SDXL_CONFIG = {
+    "steps": 30,
+    "width": 1024,
+    "height": 1024,
+    "cfg_scale": "7",
+    "sampler_name": "DPM++ 2M",
+    "scheduler": "karras",
+    "models": ['albedobaseXL_v31Large']
+}
 
-# Modèles
+FLUX_CONFIG = {
+    # NOTE: Ces paramètres sont des placeholders.
+    # Ajustez-les en fonction de votre modèle Flux et de vos préférences.
+    "steps": 20,  # Flux nécessite souvent moins d'étapes
+    "width": 1024,
+    "height": 1024,
+    "cfg_scale": "5", # Souvent plus bas pour Flux
+    "sampler_name": "DPM++ 2M SDE", # Sampler différent, exemple
+    "scheduler": "sgm_uniform", # Scheduler spécifique à Flux
+    "models": ["flux-schnell.safetensors"] # Nom du modèle Flux, à vérifier
+}
+
+# Modèles d'amélioration de prompt
 OL_models = ['gemma3']
-SD_models = ['albedobaseXL_v31Large']
-SD_model = "" # Laisser vide pour une sélection aléatoire
 
 # Liste de prompts de base
 Prompt_list = [
