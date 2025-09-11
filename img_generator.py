@@ -13,7 +13,7 @@ import argparse
 
 # Import configuration and prompts
 from config import (
-    SAVE_DIR, OL_models, Prompt_list, LORA_THEMES, UTILITY_LORAS,
+    SAVE_DIR, OL_models, Prompt_list,
     OLLAMA_PORT, MAX_RETRIES, TIMEOUT, SDXL_CONFIG, FLUX_CONFIG
 )
 from prompts import generate_random_prompt
@@ -75,7 +75,7 @@ def start_ollama():
 # Fonction pour améliorer le prompt avec Ollama
 # =======================
 
-def improve_prompt(base_prompt, Ollama_model, theme):
+def improve_prompt(base_prompt, Ollama_model, theme, config):
     """Utilise Ollama pour améliorer un prompt"""
     start_ollama()
     
@@ -84,14 +84,17 @@ def improve_prompt(base_prompt, Ollama_model, theme):
     print(f"ollama started : {timestamp}")
     command = ["ollama", "run", Ollama_model]
 
-    style_loras = LORA_THEMES.get("Neutre", [])
+    lora_themes = config.get("lora_themes", {})
+    utility_loras = config.get("utility_loras", [])
+
+    style_loras = lora_themes.get("Neutre", [])
     if theme:
         if "-" in theme:
             themes = theme.split('-')
             for t in themes:
-                style_loras.extend(LORA_THEMES.get(t, []))
+                style_loras.extend(lora_themes.get(t, []))
         else:
-            style_loras.extend(LORA_THEMES.get(theme, []))
+            style_loras.extend(lora_themes.get(theme, []))
     style_loras = list(set(style_loras))
 
     prompt_template = f"""
@@ -106,7 +109,7 @@ You are a Stable Diffusion prompt generation expert. Your task is to transform a
     * Inject **one or two** additional *thematically consistent* details that are not present in the input. These details should enrich the scene's atmosphere, narrative, or visual interest (e.g., environmental details, subtle character features, small background objects). Integrate them naturally within the prompt description.
 3. **LoRA Integration:**
     * Add the LORAS at the end of the prompt
-    * Select 1 or 2 relevant LoRAs from: {UTILITY_LORAS}.
+    * Select 1 or 2 relevant LoRAs from: {utility_loras}.
     * Select 1 style Lora from: {style_loras}
     * Integrate LoRAs as `<lora:lora_name:weight>`, weight 0.5-0.8, use only this syntaxe for Loras.
     * Omit LoRAs if irrelevant.
@@ -220,7 +223,7 @@ def generate_images_with_variations(num_iterations, variation_interval, config):
             Ollama_model = OL_models[index]
             print(f"Amelioration {i}: modèle = {Ollama_model}, Thème = {theme}")
             
-            base_prompt = improve_prompt(base_prompt, Ollama_model, theme)
+            base_prompt = improve_prompt(base_prompt, Ollama_model, theme, config)
             now = datetime.datetime.now()
             timestamp = now.strftime("%Y%m%d_%H%M%S")
             print(f"Prompt : {timestamp}")
