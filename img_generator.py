@@ -85,7 +85,7 @@ def call_ollama(prompt_template, input_data):
 
 def generate_prompt_only(base_prompt):
     """Generates a detailed prompt without LoRA syntax."""
-    prompt_template = "You are a prompt generation expert. Create a detailed, imaginative prompt from this basic description: {}"
+    prompt_template = "You are a prompt generation expert. Your task is to expand a basic description into a detailed, imaginative prompt. Respond with ONLY the detailed prompt, without any introduction, explanation, or questions. The basic description is: {}"
     return call_ollama(prompt_template, base_prompt)
 
 def select_lora_with_llm(prompt, config):
@@ -116,10 +116,6 @@ def update_workflow(workflow_data, config, prompt, lora_name):
 
 def queue_prompt(workflow):
     """Queues a prompt on the ComfyUI server."""
-    print("--- DEBUG: Workflow being sent to ComfyUI ---")
-    # Using json.dumps for pretty printing the workflow
-    print(json.dumps(workflow, indent=2, ensure_ascii=False))
-    print("---------------------------------------------")
     payload = {"prompt": workflow}
     try:
         response = requests.post(f"{COMFYUI_URL}/prompt", json=payload)
@@ -183,7 +179,7 @@ def main_generation_loop(config, num_iterations):
         print(f"\n--- Itération {i}/{num_iterations} ---")
 
         # 1. Load workflow template
-        with open(config['workflow_file'], 'r') as f:
+        with open(config['workflow_file'], 'r', encoding='utf-8') as f:
             workflow = json.load(f)
 
         # 2. Generate prompt
