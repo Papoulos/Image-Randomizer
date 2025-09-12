@@ -40,7 +40,7 @@ SDXL_CONFIG = {
             "CinematicStyle_v1.safetensors", "Adjust_SDXL_v4.0.safetensors" ],
         "SF": ["The_Petalbound.safetensors"],
         "HF": ["EpicF4nta5yXL.safetensors", "incase_style_v3-1_ponyxl_ilff.safetensors"],
-        "NP": ["Thomas_Haller_Buchanan.safetensors", "Simon Stalenhag.safetensors", "The_Petalbound.safetensors"],
+        "NP": ["Thomas_Haller_Buchanan.safetensors", "The_Petalbound.safetensors"],
         "HD": ["gopXL.safetensors"]
     }
 }
