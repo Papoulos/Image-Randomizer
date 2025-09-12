@@ -124,14 +124,6 @@ def update_workflow(workflow_data, config, prompt, lora_name):
 
 def queue_prompt(workflow):
     """Queues a prompt on the ComfyUI server."""
-    # Log the workflow to a file for debugging, as requested by the user
-    try:
-        with open("log.txt", "w", encoding="utf-8") as f:
-            f.write(json.dumps(workflow, indent=4, ensure_ascii=False))
-        print("📝 Workflow de débogage écrit dans log.txt")
-    except Exception as e:
-        print(f"❌ Erreur lors de l'écriture du fichier de log : {e}")
-
     payload = {"prompt": workflow}
     try:
         response = requests.post(f"{COMFYUI_URL}/prompt", json=payload)
@@ -196,7 +188,13 @@ def main_generation_loop(config, num_iterations):
 
         # 1. Load workflow template
         with open(config['workflow_file'], 'r', encoding='utf-8-sig') as f:
-            workflow = json.load(f)
+            workflow_wrapper = json.load(f)
+
+        # The API format wraps the workflow in a "prompt" key. We need to extract it.
+        workflow = workflow_wrapper.get("prompt")
+        if not workflow:
+            print(f"❌ Erreur: Le fichier workflow '{config['workflow_file']}' ne semble pas être au format API correct (clé 'prompt' manquante).")
+            continue
 
         # 2. Generate prompt
         base_prompt, _ = generate_random_prompt()
