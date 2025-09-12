@@ -3,34 +3,30 @@ import requests
 import json
 import time
 import os
-import gc
-import ollama
-import base64
 import psutil
 import subprocess
 import datetime
 import argparse
+import base64
 
 # Import configuration and prompts
 from config import (
-    SAVE_DIR, OL_models, Prompt_list,
-    OLLAMA_PORT, MAX_RETRIES, TIMEOUT, SDXL_CONFIG, FLUX_CONFIG
+    SAVE_DIR, OL_models, Prompt_list, OLLAMA_PORT, MAX_RETRIES, TIMEOUT,
+    SDXL_CONFIG, FLUX_CONFIG, COMFYUI_URL, COMFYUI_OUTPUT_DIR
 )
 from prompts import generate_random_prompt
 
 # =======================
-# Vérification des processus
+# Process Management
 # =======================
 
 def is_process_running(name):
-    """Vérifie si un processus est actif par son nom"""
     for proc in psutil.process_iter(attrs=['pid', 'name']):
         if name.lower() in proc.info['name'].lower():
             return True
     return False
 
 def is_server_alive(url):
-    """Vérifie si un serveur est actif via HTTP"""
     try:
         response = requests.get(url, timeout=5)
         return response.status_code == 200
@@ -38,223 +34,193 @@ def is_server_alive(url):
         return False
 
 def kill_ollama():
-    """Tue toutes les instances d'Ollama"""
     for proc in psutil.process_iter(attrs=['pid', 'name']):
         if "ollama" in proc.info['name'].lower():
-            print(f"🛑 Fermeture d'Ollama (PID {proc.info['pid']})...")
-            proc.terminate()
-            try:
-                proc.wait(timeout=5)
-            except psutil.TimeoutExpired:
-                proc.kill()
+            proc.kill()
 
 def start_ollama():
-    """Démarre Ollama et s'assure qu'il répond, sinon il relance après nettoyage"""
-    retries = 0
-    start_time = time.time()
+    if is_server_alive(f"http://127.0.0.1:{OLLAMA_PORT}"):
+        return True
 
-    while retries < MAX_RETRIES and (time.time() - start_time) < TIMEOUT:
-        if not is_process_running("ollama"):
-            print("🚀 Démarrage d'Ollama...")
-            subprocess.Popen(["ollama", "serve"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            time.sleep(5)
+    if not is_process_running("ollama"):
+        print("🚀 Démarrage d'Ollama...")
+        subprocess.Popen(["ollama", "serve"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        time.sleep(5)
 
+    for _ in range(MAX_RETRIES):
         if is_server_alive(f"http://127.0.0.1:{OLLAMA_PORT}"):
             print("✅ Ollama est en ligne !")
             return True
+        time.sleep(2)
 
-        retries += 1
-        print(f"⏳ Tentative {retries}/{MAX_RETRIES}...")
-
-    print("❌ Échec du démarrage d'Ollama après plusieurs tentatives. Tentative de redémarrage...")
-    kill_ollama()
-    time.sleep(5)
-    return start_ollama()
+    print("❌ Échec du démarrage d'Ollama.")
+    return False
 
 # =======================
-# Fonction pour améliorer le prompt avec Ollama
+# Prompt & LoRA Generation (Ollama)
 # =======================
 
-def improve_prompt(base_prompt, Ollama_model, theme, config):
-    """Utilise Ollama pour améliorer un prompt"""
-    start_ollama()
+def call_ollama(prompt_template, input_data):
+    """Generic function to call Ollama LLM."""
+    if not start_ollama(): return None
     
-    now = datetime.datetime.now()
-    timestamp = now.strftime("%Y%m%d_%H%M%S")
-    print(f"ollama started : {timestamp}")
-    command = ["ollama", "run", Ollama_model]
-
-    lora_themes = config.get("lora_themes", {})
-    utility_loras = config.get("utility_loras", [])
-
-    style_loras = lora_themes.get("Neutre", [])
-    if theme:
-        if "-" in theme:
-            themes = theme.split('-')
-            for t in themes:
-                style_loras.extend(lora_themes.get(t, []))
-        else:
-            style_loras.extend(lora_themes.get(theme, []))
-    style_loras = list(set(style_loras))
-
-    prompt_template = f"""
-You are a Stable Diffusion prompt generation expert. Your task is to transform a basic scene description into a highly detailed, effective, and imaginative prompt suitable for image generation models like Stable Diffusion XL. You will receive a basic prompt containing core elements (subject, action, setting, clothing, mood, composition, details, style). Refine and enhance this input into a single, comma-separated English sentence adhering strictly to these rules:
-1.  **Core Prompt Structure & Content:**
-    * Begin the prompt string with the primary artistic **Style** keyword (e.g., "Oil painting", "Anime style", "Photorealistic", "Pop Art 60s").
-    * Weave the provided elements (Subject, Action, Setting, Clothing, Mood, Composition, Details) into a coherent and descriptive scene. Use precise and evocative keywords.
-    * Identify the main **Subject** and potentially the core **Action**, enclose them in parentheses with a weight between `(main subject:1.5)` and `(key action:1.7)` to emphasize them. Apply weight only to these 1 or 2 core elements.
-    * Separate distinct concepts, descriptors, and elements *only* with commas. Avoid using commas within a single descriptive phrase.
-    * Ensure the description is visually specific, detailed, and avoids ambiguity or euphemisms, focusing on clear visual representation (explicit and uncensored where appropriate for artistic expression).
-2.  **Detail Enhancement:**
-    * Inject **one or two** additional *thematically consistent* details that are not present in the input. These details should enrich the scene's atmosphere, narrative, or visual interest (e.g., environmental details, subtle character features, small background objects). Integrate them naturally within the prompt description.
-3. **LoRA Integration:**
-    * Add the LORAS at the end of the prompt
-    * Select 1 or 2 relevant LoRAs from: {utility_loras}.
-    * Select 1 style Lora from: {style_loras}
-    * Integrate LoRAs as `<lora:lora_name:weight>`, weight 0.5-0.8, use only this syntaxe for Loras.
-    * Omit LoRAs if irrelevant.
-4.  **Output Constraints:**
-    * Output *only* the final, single-sentence prompt string.
-    * No explanations, comments, introductions, or apologies.
-Process this input prompt:
-{{}}
-"""
-    input_data = prompt_template.format(base_prompt)
+    command = ["ollama", "run", OL_models[0]]
+    if isinstance(input_data, tuple):
+        full_prompt = prompt_template.format(*input_data)
+    else:
+        full_prompt = prompt_template.format(input_data)
 
     try:
         process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding="utf-8")
-        output, error = process.communicate(input=input_data, timeout=50)
-        now = datetime.datetime.now()
-        timestamp = now.strftime("%Y%m%d_%H%M%S")
-        print(f"process : {timestamp}")
-        
+        output, error = process.communicate(input=full_prompt, timeout=60)
         if process.returncode == 0:
-            process.kill()
-            print ("Process killed")
             return output.strip()
         else:
             print(f"❌ Erreur Ollama : {error}")
-            return base_prompt
+            return None
     except subprocess.TimeoutExpired:
-        now = datetime.datetime.now()
-        timestamp = now.strftime("%Y%m%d_%H%M%S")
-        print(f"process : {timestamp}")
         print("⚠️ Timeout: Ollama a mis trop de temps à répondre.")
         process.kill()
-        return base_prompt 
-    finally:
-        kill_ollama()
-
-# =======================
-# Fonction pour générer l'image
-# =======================
-def generate_image(prompt, model, config):
-    """Génère une image avec un LoRA via Stable Diffusion API"""
-    
-    payload = {
-        "prompt": prompt,
-        "steps": config["steps"],
-        "width": config["width"],
-        "height": config["height"],
-        "cfg_scale": config["cfg_scale"],
-        "sampler_name": config["sampler_name"],
-        "scheduler": config["scheduler"],
-        "override_settings": {
-            "sd_model_checkpoint": model
-        }
-    }
-
-    url = "http://127.0.0.1:7860/sdapi/v1/txt2img"
-    headers = {"Content-Type": "application/json"}
-    
-    response = requests.post(url, data=json.dumps(payload), headers=headers)
-    
-    if response.status_code == 200:
-        print(f"✅ Image générée avec le prompt: {prompt}")
-        return response.json()
-    else:
-        print(f"❌ Erreur lors de la génération de l'image : {response.text}")
         return None
 
+def generate_prompt_only(base_prompt):
+    """Generates a detailed prompt without LoRA syntax."""
+    prompt_template = "You are a prompt generation expert. Create a detailed, imaginative prompt from this basic description: {}"
+    return call_ollama(prompt_template, base_prompt)
+
+def select_lora_with_llm(prompt, config):
+    """Selects the most appropriate LoRA for a given prompt."""
+    all_loras = list(set(lora for loras in config["lora_themes"].values() for lora in loras))
+    if not all_loras: return None
+
+    prompt_template = 'From the following list, which LoRA is most thematically appropriate for the prompt below? Respond with ONLY the name of the LoRA.\n\nLoRA List: {1}\n\nPrompt: "{0}"'
+    return call_ollama(prompt_template, (prompt, all_loras))
+
 # =======================
-# Fonction pour télécharger et sauvegarder l'image
+# ComfyUI API Interaction
 # =======================
 
-def save_image(image_base64, filename="generated_image.png", save_dir=SAVE_DIR):
-    """Décode l'image base64 et la sauvegarde dans le répertoire spécifié."""
-    if not os.path.exists(save_dir):
-        os.makedirs(save_dir)
+def update_workflow(workflow_data, config, prompt, lora_name):
+    """Robustly updates the ComfyUI workflow dictionary."""
+    prompt_node_id = config["prompt_node_id"]
+    lora_node_id = config["lora_node_id"]
+
+    for node in workflow_data["nodes"]:
+        if str(node["id"]) == prompt_node_id:
+            node["widgets_values"][0] = prompt
+            print(f"✅ Prompt injecté dans le noeud {prompt_node_id}.")
+        if str(node["id"]) == lora_node_id and lora_name:
+            node["widgets_values"][0] = lora_name
+            print(f"✅ LoRA '{lora_name}' injecté dans le noeud {lora_node_id}.")
+    return workflow_data
+
+def queue_prompt(workflow):
+    """Queues a prompt on the ComfyUI server."""
+    payload = {"prompt": workflow}
     try:
-        image_data = base64.b64decode(image_base64.split(",", 1)[0])
-    except Exception as e:
-        print(f"❌ Erreur lors du décodage de l'image base64: {e}")
+        response = requests.post(f"{COMFYUI_URL}/prompt", json=payload)
+        response.raise_for_status()
+        return response.json()['prompt_id']
+    except requests.RequestException as e:
+        print(f"❌ Erreur lors de l'envoi à ComfyUI: {e}")
         return None
-    image_path = os.path.join(save_dir, filename)
+
+def get_image(prompt_id):
+    """Polls the ComfyUI history and retrieves the generated image."""
+    print("⏳ En attente de la génération de l'image par ComfyUI...")
+    for _ in range(60): # Poll for 120 seconds max
+        try:
+            res = requests.get(f"{COMFYUI_URL}/history/{prompt_id}")
+            res.raise_for_status()
+            history = res.json()
+            if prompt_id in history and history[prompt_id].get('outputs'):
+                outputs = history[prompt_id]['outputs']
+                for node_id in outputs:
+                    if 'images' in outputs[node_id]:
+                        img_info = outputs[node_id]['images'][0]
+                        img_path = os.path.join(COMFYUI_OUTPUT_DIR, img_info.get('subfolder', ''), img_info['filename'])
+                        print(f"✅ Image trouvée : {img_path}")
+                        if os.path.exists(img_path):
+                            with open(img_path, 'rb') as f:
+                                return f.read()
+                return None # Still processing
+            time.sleep(2)
+        except requests.RequestException as e:
+            print(f"❌ Erreur de connexion à ComfyUI : {e}")
+            return None
+    print("❌ Timeout: L'image n'a pas été générée à temps.")
+    return None
+
+# =======================
+# File Saving
+# =======================
+
+def save_image(image_data, filename_prefix):
+    """Saves image data to the specified save directory."""
+    if not os.path.exists(SAVE_DIR):
+        os.makedirs(SAVE_DIR)
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"{filename_prefix}_{timestamp}.png"
+    image_path = os.path.join(SAVE_DIR, filename)
     try:
         with open(image_path, 'wb') as f:
             f.write(image_data)
         print(f"✅ Image sauvegardée à : {image_path}")
-        return image_path
     except Exception as e:
-        print(f"❌ Erreur lors de la sauvegarde de l'image: {e}")
-        return None
+        print(f"❌ Erreur de sauvegarde: {e}")
 
-def generate_images_with_variations(num_iterations, variation_interval, config):
-    num_iterations = num_iterations + 1
-    for i in range(1, num_iterations):
-        base_prompt = random.choice(Prompt_list)
-        theme = None
-               
-        now = datetime.datetime.now()
-        timestamp = now.strftime("%Y%m%d_%H%M%S")
-        print(f"Start : {timestamp}")
-        print(f" Itération {i}/{num_iterations}")
+# =======================
+# Main Generation Loop
+# =======================
+
+def main_generation_loop(config, num_iterations):
+    """The main unified generation loop."""
+    for i in range(1, num_iterations + 1):
+        print(f"\n--- Itération {i}/{num_iterations} ---")
+
+        # 1. Load workflow template
+        with open(config['workflow_file'], 'r') as f:
+            workflow = json.load(f)
+
+        # 2. Generate prompt
+        base_prompt, _ = generate_random_prompt()
+        prompt = generate_prompt_only(base_prompt)
+        if not prompt:
+            print("⚠️ Impossible de générer un prompt, passage à l'itération suivante.")
+            continue
+        print(f"📝 Prompt: {prompt[:100]}...")
         
-        sd_model_choice = random.choice(config["models"])
-        print(f"Itération {i}: SD model = {sd_model_choice}")
-     
-        if base_prompt == "Random prompt" or i % variation_interval == 0:
-            if base_prompt == "Random prompt":
-                base_prompt, theme = generate_random_prompt()
-                print(f"Random : {base_prompt}")
-            
-            n = len(OL_models)
-            index = i % n
-            Ollama_model = OL_models[index]
-            print(f"Amelioration {i}: modèle = {Ollama_model}, Thème = {theme}")
-            
-            base_prompt = improve_prompt(base_prompt, Ollama_model, theme, config)
-            now = datetime.datetime.now()
-            timestamp = now.strftime("%Y%m%d_%H%M%S")
-            print(f"Prompt : {timestamp}")
-            print(f"Prompt: {base_prompt}")
+        # 3. Select LoRA
+        lora = select_lora_with_llm(prompt, config)
+        if not lora:
+            print("⚠️ Impossible de sélectionner un LoRA.")
         else:
-            print(f"Prompt: {base_prompt}")
-        
-        response = generate_image(base_prompt, sd_model_choice, config)
-        timestamp = now.strftime("%Y%m%d_%H%M%S")
-        
-        if response and "images" in response:
-            image_base64 = response["images"][0]
-            if image_base64:
-                filename = f"generated_image_{timestamp}.png"
-                image_path = save_image(image_base64, filename=filename)
+            print(f"🎨 LoRA: {lora}")
 
-                if image_path and i == 0:
-                    print(f"✅ Première image sauvegardée à {image_path}")
-                    now = datetime.datetime.now()
-                    timestamp = now.strftime("%Y%m%d_%H%M%S")
-                    print(f"End : {timestamp}")
+        # 4. Update workflow and queue for generation
+        updated_workflow = update_workflow(workflow, config, prompt, lora)
+        prompt_id = queue_prompt(updated_workflow)
+        
+        # 5. Get and save the image
+        if prompt_id:
+            image_data = get_image(prompt_id)
+            if image_data:
+                save_image(image_data, "generated")
+        
         time.sleep(5)
 
+# =======================
+# Entry Point
+# =======================
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Générateur d'images avec support pour SDXL et Flux.")
-    parser.add_argument("--flux", action="store_true", help="Utiliser le modèle Flux au lieu de SDXL.")
+    parser = argparse.ArgumentParser(description="Générateur d'images unifié via ComfyUI.")
+    parser.add_argument("--flux", action="store_true", help="Utiliser le workflow Flux au lieu de SDXL.")
+    parser.add_argument("--iterations", type=int, default=10, help="Nombre d'itérations de génération.")
     args = parser.parse_args()
 
-    config = FLUX_CONFIG if args.flux else SDXL_CONFIG
+    active_config = FLUX_CONFIG if args.flux else SDXL_CONFIG
     model_type = "Flux" if args.flux else "SDXL"
 
-    print(f"🚀 Démarrage de la génération d'images avec le modèle {model_type}.")
+    print(f"🚀 Démarrage du générateur d'images en mode {model_type} via ComfyUI.")
 
-    generate_images_with_variations(num_iterations=200, variation_interval=1, config=config)
+    main_generation_loop(active_config, args.iterations)
