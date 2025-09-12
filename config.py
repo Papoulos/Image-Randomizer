@@ -17,14 +17,14 @@ FLUX_CONFIG = {
     "lora_node_id": "38",
     "lora_themes": {
         "Neutre": [
-            "aidmaFLUXPro1.1-FLUX-v0.3",
-            "Fluxartis 28.11A",
-            "HyperdetailedRealismMJ7Flux",
-            "Luminous_Shadowscape-Flux",
+            "aidmaFLUXPro1.1-FLUX-v0.3.safetensors",
+            "Fluxartis 28.11A.safetensors",
+            "HyperdetailedRealismMJ7Flux.safetensors",
+            "Luminous_Shadowscape-Flux.safetensors",
             "Alex_Vede.safetensors"
         ],
-        "HF": ["FluxDFaeTasticDetails", "dark_fantasy_flux"],
-        "DH": ["dark_fantasy_flux"]
+        "HF": ["FluxDFaeTasticDetails.safetensors", "dark_fantasy_flux.safetensors"],
+        "DH": ["dark_fantasy_flux.safetensors"]
     }
 }
 
@@ -36,14 +36,14 @@ SDXL_CONFIG = {
     "lora_node_id": "11",
     "lora_themes": {
         "Neutre": [
-            "Splash_Art_SDXL", "ncase-ilff-v3-4", "Luminous_Shadowscape-000016",
-            "Clean_Minimalist", "Digital_Impressionist_SDXL", "CinematicStyle_v1",
-            "Adjust_SDXL_v4.0"
+            "Splash_Art_SDXL.safetensors", "ncase-ilff-v3-4.safetensors", "Luminous_Shadowscape-000016.safetensors",
+            "Clean_Minimalist.safetensors", "Digital_Impressionist_SDXL.safetensors", "CinematicStyle_v1.safetensors",
+            "Adjust_SDXL_v4.0.safetensors"
         ],
-        "SF": ["Simon Stalenhag", "The_Petalbound"],
-        "HF": ["EpicF4nta5yXL"],
-        "NP": ["Thomas_Haller_Buchanan", "Simon Stalenhag", "The_Petalbound"],
-        "HD": ["Sinfully_Stylish_1.0_SDXL"]
+        "SF": ["Simon Stalenhag.safetensors", "The_Petalbound.safetensors"],
+        "HF": ["EpicF4nta5yXL.safetensors"],
+        "NP": ["Thomas_Haller_Buchanan.safetensors", "Simon Stalenhag.safetensors", "The_Petalbound.safetensors"],
+        "HD": ["Sinfully_Stylish_1.0_SDXL.safetensors"]
     }
 }
 
