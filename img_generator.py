@@ -179,7 +179,7 @@ def main_generation_loop(config, num_iterations):
         print(f"\n--- Itération {i}/{num_iterations} ---")
 
         # 1. Load workflow template
-        with open(config['workflow_file'], 'r') as f:
+        with open(config['workflow_file'], 'r', encoding='utf-8') as f:
             workflow = json.load(f)
 
         # 2. Generate prompt
