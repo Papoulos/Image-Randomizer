@@ -12,7 +12,7 @@ import base64
 # Import configuration and prompts
 from config import (
     SAVE_DIR, OL_models, Prompt_list, OLLAMA_PORT, MAX_RETRIES, TIMEOUT,
-    SDXL_CONFIG, FLUX_CONFIG, COMFYUI_URL, COMFYUI_OUTPUT_DIR
+    SDXL_CONFIG, FLUX_CONFIG, COMFYUI_URL, COMFYUI_OUTPUT_DIR, IMAGE_TIMEOUT
 )
 from prompts import generate_random_prompt
 
@@ -136,7 +136,8 @@ def queue_prompt(workflow):
 def get_image(prompt_id):
     """Polls the ComfyUI history and retrieves the generated image."""
     print("⏳ En attente de la génération de l'image par ComfyUI...")
-    for _ in range(60): # Poll for 120 seconds max
+    # Poll for IMAGE_TIMEOUT seconds max
+    for _ in range(IMAGE_TIMEOUT // 2):
         try:
             res = requests.get(f"{COMFYUI_URL}/history/{prompt_id}")
             res.raise_for_status()
