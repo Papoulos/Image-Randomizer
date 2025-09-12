@@ -179,16 +179,23 @@ def main_generation_loop(config, num_iterations):
         print(f"\n--- Itération {i}/{num_iterations} ---")
 
         # 1. Load workflow template
-        with open(config['workflow_file'], 'r', encoding='utf-8') as f:
+        with open(config['workflow_file'], 'r', encoding='utf-8-sig') as f:
             workflow = json.load(f)
 
-        # 2. Generate prompt (DEBUG: Hardcoded)
-        prompt = "a beautiful landscape, cinematic, dramatic lighting"
-        print(f"📝 Prompt (DEBUG): {prompt[:100]}...")
+        # 2. Generate prompt
+        base_prompt, _ = generate_random_prompt()
+        prompt = generate_prompt_only(base_prompt)
+        if not prompt:
+            print("⚠️ Impossible de générer un prompt, passage à l'itération suivante.")
+            continue
+        print(f"📝 Prompt: {prompt[:100]}...")
 
-        # 3. Select LoRA (DEBUG: Bypassed)
-        lora = None
-        print("🎨 LoRA (DEBUG): Bypassed")
+        # 3. Select LoRA
+        lora = select_lora_with_llm(prompt, config)
+        if not lora:
+            print("⚠️ Impossible de sélectionner un LoRA.")
+        else:
+            print(f"🎨 LoRA: {lora}")
 
         # 4. Update workflow and queue for generation
         updated_workflow = update_workflow(workflow, config, prompt, lora)
