@@ -101,17 +101,25 @@ def select_lora_with_llm(prompt, config):
 # =======================
 
 def update_workflow(workflow_data, config, prompt, lora_name):
-    """Robustly updates the ComfyUI workflow dictionary."""
+    """Robustly updates the ComfyUI API workflow dictionary."""
     prompt_node_id = config["prompt_node_id"]
     lora_node_id = config["lora_node_id"]
 
-    for node in workflow_data["nodes"]:
-        if str(node["id"]) == prompt_node_id:
-            node["widgets_values"][0] = prompt
-            print(f"✅ Prompt injecté dans le noeud {prompt_node_id}.")
-        if str(node["id"]) == lora_node_id and lora_name:
-            node["widgets_values"][0] = lora_name
-            print(f"✅ LoRA '{lora_name}' injecté dans le noeud {lora_node_id}.")
+    # Update the prompt text in the specified node
+    if prompt_node_id in workflow_data:
+        workflow_data[prompt_node_id]["inputs"]["text"] = prompt
+        print(f"✅ Prompt injecté dans le noeud {prompt_node_id}.")
+    else:
+        print(f"❌ Erreur: Noeud de prompt ID '{prompt_node_id}' non trouvé dans le workflow.")
+
+    # Update the LoRA name in the specified node, if a LoRA is provided
+    if lora_name and lora_node_id in workflow_data:
+        workflow_data[lora_node_id]["inputs"]["lora_name"] = lora_name
+        print(f"✅ LoRA '{lora_name}' injecté dans le noeud {lora_node_id}.")
+    elif lora_name:
+        # This case handles when a lora_name is available but the node ID is not found
+        print(f"❌ Erreur: Noeud de LoRA ID '{lora_node_id}' non trouvé dans le workflow.")
+
     return workflow_data
 
 def queue_prompt(workflow):
