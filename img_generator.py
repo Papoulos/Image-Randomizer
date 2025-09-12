@@ -188,7 +188,13 @@ def main_generation_loop(config, num_iterations):
 
         # 1. Load workflow template
         with open(config['workflow_file'], 'r', encoding='utf-8-sig') as f:
-            workflow = json.load(f)
+            workflow_wrapper = json.load(f)
+
+        # The API format wraps the workflow in a "prompt" key. We need to extract it.
+        workflow = workflow_wrapper.get("prompt")
+        if not workflow:
+            print(f"❌ Erreur: Le fichier workflow '{config['workflow_file']}' ne semble pas être au format API correct (clé 'prompt' manquante).")
+            continue
 
         # 2. Generate prompt
         base_prompt, _ = generate_random_prompt()
