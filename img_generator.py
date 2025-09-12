@@ -124,6 +124,14 @@ def update_workflow(workflow_data, config, prompt, lora_name):
 
 def queue_prompt(workflow):
     """Queues a prompt on the ComfyUI server."""
+    # Log the workflow to a file for debugging, as requested by the user
+    try:
+        with open("log.txt", "w", encoding="utf-8") as f:
+            f.write(json.dumps(workflow, indent=4, ensure_ascii=False))
+        print("📝 Workflow de débogage écrit dans log.txt")
+    except Exception as e:
+        print(f"❌ Erreur lors de l'écriture du fichier de log : {e}")
+
     payload = {"prompt": workflow}
     try:
         response = requests.post(f"{COMFYUI_URL}/prompt", json=payload)
