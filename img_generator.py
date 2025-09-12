@@ -116,6 +116,10 @@ def update_workflow(workflow_data, config, prompt, lora_name):
 
 def queue_prompt(workflow):
     """Queues a prompt on the ComfyUI server."""
+    print("--- DEBUG: Workflow being sent to ComfyUI ---")
+    # Using json.dumps for pretty printing the workflow
+    print(json.dumps(workflow, indent=2, ensure_ascii=False))
+    print("---------------------------------------------")
     payload = {"prompt": workflow}
     try:
         response = requests.post(f"{COMFYUI_URL}/prompt", json=payload)
@@ -179,7 +183,7 @@ def main_generation_loop(config, num_iterations):
         print(f"\n--- Itération {i}/{num_iterations} ---")
 
         # 1. Load workflow template
-        with open(config['workflow_file'], 'r', encoding='utf-8') as f:
+        with open(config['workflow_file'], 'r') as f:
             workflow = json.load(f)
 
         # 2. Generate prompt
