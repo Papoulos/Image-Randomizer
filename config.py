@@ -53,7 +53,7 @@ OL_models = ['gemma3']
 OLLAMA_PORT = 11434
 MAX_RETRIES = 20
 TIMEOUT = 60
-IMAGE_TIMEOUT = 300
+IMAGE_TIMEOUT = 500
 
 # =======================
 # Liste de prompts de base
