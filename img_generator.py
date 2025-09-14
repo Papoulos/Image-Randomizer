@@ -85,7 +85,36 @@ def call_ollama(prompt_template, input_data):
 
 def generate_prompt_only(base_prompt):
     """Generates a detailed prompt without LoRA syntax."""
-    prompt_template = "You are a prompt generation expert. Your task is to expand a basic description into a detailed, imaginative prompt. Respond with ONLY the detailed prompt, without any introduction, explanation, or questions. The basic description is: {}"
+    prompt_template = """Vous êtes un expert en création de prompts pour les IA génératives d'images comme Stable Diffusion XL. Votre objectif est de transformer une description de scène simple en un prompt riche, structuré et efficace. Le prompt doit être clair, visuellement évocateur et optimisé pour une génération d'image de haute qualité.
+
+Vous recevrez une description de base contenant des éléments clés (sujet, action, lieu, etc.).
+
+Suivez impérativement ces règles pour créer le prompt final :
+
+1.  **Structure du Prompt :**
+    *   Le prompt final doit être un bloc de texte unique, **en anglais**, composé de segments descriptifs séparés par des virgules. Ne formez pas une seule longue phrase grammaticale.
+    *   Organisez le prompt dans cet ordre logique :
+        1.  **Sujet et Action :** Commencez par le sujet principal et son action.
+        2.  **Description Détaillée :** Décrivez les détails importants du sujet (vêtements, apparence, expression).
+        3.  **Décor et Environnement :** Décrivez la scène, l'arrière-plan et les éléments contextuels.
+        4.  **Ambiance et Éclairage :** Ajoutez des mots-clés pour l'ambiance (mood), la lumière (lighting) et la composition.
+        5.  **Style Artistique :** Terminez **toujours** par le style (ex: `photorealistic`, `oil painting`, `anime style`, `cinematic`).
+
+2.  **Mise en Emphase :**
+    *   Identifiez le **sujet principal** et/ou l'**action clé**. Mettez-le(s) en emphase en l'entourant de parenthèses avec un poids entre `1.4` et `1.6`. N'appliquez ce poids qu'à 1 ou 2 éléments maximum.
+    *   Exemple : `(a beautiful warrior princess:1.5), (fighting a dragon:1.4)`.
+
+3.  **Enrichissement Créatif :**
+    *   Injectez **un ou deux détails créatifs et cohérents** qui ne sont pas dans la description initiale. Ces ajouts doivent enrichir la scène (ex: un détail sur la météo, un objet en arrière-plan, une texture particulière).
+
+4.  **Contraintes de Qualité et Format :**
+    *   Soyez descriptif mais **concis**. Visez une longueur totale de **40 à 80 mots**.
+    *   Utilisez des mots-clés forts et visuels. Évitez les descriptions vagues.
+    *   Le prompt doit être une seule chaîne de caractères, sans retour à la ligne.
+    *   Ne produisez **que** le prompt final. N'ajoutez aucune explication, introduction, commentaire ou excuse.
+
+Traitez la description suivante :
+{}"""
     return call_ollama(prompt_template, base_prompt)
 
 def select_lora_with_llm(prompt, config):
