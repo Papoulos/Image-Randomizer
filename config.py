@@ -24,7 +24,8 @@ FLUX_CONFIG = {
             "Alex_Vede.safetensors"
         ],
         "HF": ["FluxDFaeTasticDetails.safetensors", "dark_fantasy_flux.safetensors", "Ev_Ganin_IV.safetensors"],
-        "DH": ["dark_fantasy_flux.safetensors"]
+        "DH": ["dark_fantasy_flux.safetensors"],
+        "SF": ["Mecha-flux.safetensors","Xuer - FLUX.safetensors"]
     }
 }
 
@@ -37,9 +38,9 @@ SDXL_CONFIG = {
     "lora_themes": {
         "Neutre": [
             "Splash_Art_SDXL.safetensors", "Luminous_Shadowscape-000016.safetensors",
-            "CinematicStyle_v1.safetensors", "Adjust_SDXL_v4.0.safetensors" ],
+            "CinematicStyle_v1.safetensors", "Adjust_SDXL_v4.0.safetensors","Phandigrams_II.safetensors" ],
         "SF": ["The_Petalbound.safetensors"],
-        "HF": ["incase_style_v3-1_ponyxl_ilff.safetensors"],
+        "HF": ["incase_style_v3-1_ponyxl_ilff.safetensors","Ev_Ganin_IV.safetensors"],
         "NP": ["The_Petalbound.safetensors"],
         "HD": ["gopXL.safetensors"]
     }
