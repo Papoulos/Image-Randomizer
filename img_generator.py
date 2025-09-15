@@ -216,8 +216,8 @@ def get_image(prompt_id):
                     if 'images' in outputs[node_id]:
                         img_info = outputs[node_id]['images'][0]
                         img_path = os.path.join(COMFYUI_OUTPUT_DIR, img_info.get('subfolder', ''), img_info['filename'])
-                        print(f"✅ Image trouvée : {img_path}")
                         if os.path.exists(img_path):
+                            print(f"✅ Image trouvée : {img_path}")
                             with open(img_path, 'rb') as f:
                                 return f.read()
             time.sleep(2)
