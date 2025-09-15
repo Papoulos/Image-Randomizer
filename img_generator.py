@@ -204,8 +204,29 @@ def save_image(image_data, filename_prefix):
         with open(image_path, 'wb') as f:
             f.write(image_data)
         print(f"✅ Image sauvegardée à : {image_path}")
+        return filename
     except Exception as e:
         print(f"❌ Erreur de sauvegarde: {e}")
+        return None
+
+def save_json_workflow(workflow_data, image_filename):
+    """Saves the workflow JSON to the 'jsons' directory, named after the image."""
+    if not image_filename: return
+
+    JSON_SAVE_DIR = "jsons"
+    if not os.path.exists(JSON_SAVE_DIR):
+        os.makedirs(JSON_SAVE_DIR)
+
+    json_filename = os.path.splitext(os.path.basename(image_filename))[0] + ".json"
+    file_path = os.path.join(JSON_SAVE_DIR, json_filename)
+
+    try:
+        api_payload = {"prompt": workflow_data}
+        with open(file_path, 'w', encoding='utf-8') as f:
+            json.dump(api_payload, f, indent=4, ensure_ascii=False)
+        print(f"✅ JSON workflow sauvegardé à : {file_path}")
+    except Exception as e:
+        print(f"❌ Erreur de sauvegarde du JSON: {e}")
 
 # =======================
 # Main Generation Loop
@@ -249,7 +270,9 @@ def main_generation_loop(config, num_iterations):
         if prompt_id:
             image_data = get_image(prompt_id)
             if image_data:
-                save_image(image_data, "generated")
+                image_filename = save_image(image_data, "generated")
+                if image_filename:
+                    save_json_workflow(updated_workflow, image_filename)
         
         time.sleep(5)
 
