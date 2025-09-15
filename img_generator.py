@@ -151,15 +151,54 @@ def update_workflow(workflow_data, config, prompt, lora_name):
 
     return workflow_data
 
-def queue_prompt(workflow):
-    """Queues a prompt on the ComfyUI server."""
-    payload = {"prompt": workflow}
+def queue_prompt(json_filename):
+    """Queues a prompt on the ComfyUI server using curl."""
+    json_filepath = os.path.join("jsons", json_filename)
+
+    if not os.path.exists(json_filepath):
+        print(f"❌ Erreur: Fichier workflow '{json_filepath}' non trouvé.")
+        return None
+
+    command = [
+        "curl",
+        "-X", "POST",
+        "--silent",
+        "--data", f"@{json_filepath}",
+        f"{COMFYUI_URL}/prompt"
+    ]
+
     try:
-        response = requests.post(f"{COMFYUI_URL}/prompt", json=payload)
-        response.raise_for_status()
-        return response.json()['prompt_id']
-    except requests.RequestException as e:
-        print(f"❌ Erreur lors de l'envoi à ComfyUI: {e}")
+        result = subprocess.run(
+            command,
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=30,
+            encoding='utf-8'
+        )
+        response_json = json.loads(result.stdout)
+        prompt_id = response_json.get('prompt_id')
+        if prompt_id:
+            print(f"✅ Prompt mis en file d'attente avec l'ID : {prompt_id}")
+            return prompt_id
+        else:
+            print(f"❌ Erreur: 'prompt_id' non trouvé dans la réponse de ComfyUI.")
+            print(f"Réponse complète: {result.stdout}")
+            return None
+    except subprocess.CalledProcessError as e:
+        print(f"❌ Erreur lors de l'appel curl à ComfyUI.")
+        print(f"Stderr: {e.stderr}")
+        if e.stdout:
+            print(f"Stdout: {e.stdout}")
+        return None
+    except subprocess.TimeoutExpired:
+        print("⚠️ Timeout: curl a mis trop de temps à répondre.")
+        return None
+    except json.JSONDecodeError:
+        print(f"❌ Erreur de décodage JSON. Réponse de ComfyUI: {result.stdout}")
+        return None
+    except Exception as e:
+        print(f"❌ Une erreur inattendue est survenue avec curl: {e}")
         return None
 
 def get_image(prompt_id):
@@ -191,20 +230,6 @@ def get_image(prompt_id):
 # =======================
 # File Saving
 # =======================
-
-def save_image(image_data, filename):
-    """Saves image data to the specified save directory with a given filename."""
-    if not os.path.exists(SAVE_DIR):
-        os.makedirs(SAVE_DIR)
-    image_path = os.path.join(SAVE_DIR, filename)
-    try:
-        with open(image_path, 'wb') as f:
-            f.write(image_data)
-        print(f"✅ Image sauvegardée à : {image_path}")
-        return True
-    except Exception as e:
-        print(f"❌ Erreur de sauvegarde: {e}")
-        return False
 
 def save_json_workflow(workflow_data, filename):
     """Saves the workflow JSON to the 'jsons' directory with a given filename."""
@@ -267,13 +292,11 @@ def main_generation_loop(config, num_iterations):
         save_json_workflow(updated_workflow, json_filename)
 
         # 7. Queue prompt for generation
-        prompt_id = queue_prompt(updated_workflow)
+        prompt_id = queue_prompt(json_filename)
         
-        # 8. Get and save the image
+        # 8. Get the image (path is printed by get_image)
         if prompt_id:
-            image_data = get_image(prompt_id)
-            if image_data:
-                save_image(image_data, image_filename)
+            get_image(prompt_id)
         
         time.sleep(5)
 
