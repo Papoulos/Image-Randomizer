@@ -201,9 +201,9 @@ def queue_prompt(json_filename):
         print(f"❌ Une erreur inattendue est survenue avec curl: {e}")
         return None
 
-def get_image(prompt_id):
-    """Polls the ComfyUI history and retrieves the generated image."""
-    print("⏳ En attente de la génération de l'image par ComfyUI...")
+def wait_for_generation(prompt_id):
+    """Polls the ComfyUI history and waits for the generation to complete."""
+    print("⏳ En attente de la fin de la génération par ComfyUI...")
     start_time = time.time()
     while time.time() - start_time < IMAGE_TIMEOUT:
         try:
@@ -211,47 +211,22 @@ def get_image(prompt_id):
             res.raise_for_status()
             history = res.json()
 
-            # --- START DEBUGGING ---
-            print(f"DEBUG: Polling history for prompt_id: {prompt_id}")
-            if prompt_id in history:
-                print(f"DEBUG: Found prompt_id in history. Keys: {list(history[prompt_id].keys())}")
-                if 'outputs' in history[prompt_id]:
-                    print("DEBUG: 'outputs' key found.")
-                else:
-                    print("DEBUG: 'outputs' key NOT found in prompt data.")
-            else:
-                print(f"DEBUG: prompt_id not found in history keys: {list(history.keys())}")
-            # --- END DEBUGGING ---
-
+            # Check if the prompt is in the history and has outputs, which signals completion.
             if prompt_id in history and history[prompt_id].get('outputs'):
-                outputs = history[prompt_id]['outputs']
-                for node_id in outputs:
-                    if 'images' in outputs[node_id]:
-                        img_info = outputs[node_id]['images'][0]
-                        img_path = os.path.join(COMFYUI_OUTPUT_DIR, img_info.get('subfolder', ''), img_info['filename'])
+                print("✅ Génération terminée.")
+                return True # Signal success
 
-                        # --- START DEBUGGING ---
-                        print(f"DEBUG: Image node found. Constructed path: '{img_path}'")
-                        path_exists = os.path.exists(img_path)
-                        print(f"DEBUG: Path exists? {path_exists}")
-                        # --- END DEBUGGING ---
-
-                        if path_exists:
-                            print(f"✅ Image trouvée : {img_path}")
-                            with open(img_path, 'rb') as f:
-                                return f.read()
-            time.sleep(2)
+            time.sleep(2) # Poll every 2 seconds
         except requests.RequestException as e:
             print(f"❌ Erreur de connexion à ComfyUI : {e}")
-            return None
-        except json.JSONDecodeError as e:
-            print(f"❌ Erreur de décodage JSON de la réponse de l'historique : {e}")
-            # It's possible the history response is not yet valid JSON
+            return False # Signal failure
+        except json.JSONDecodeError:
+            # History might not be ready yet, just wait and retry
             time.sleep(2)
             continue
 
-    print("❌ Timeout: L'image n'a pas été générée à temps.")
-    return None
+    print("❌ Timeout: La génération n'a pas été confirmée à temps.")
+    return False # Signal failure
 
 # =======================
 # File Saving
@@ -320,11 +295,11 @@ def main_generation_loop(config, num_iterations):
         # 7. Queue prompt for generation
         prompt_id = queue_prompt(json_filename)
         
-        # 8. Get the image (path is printed by get_image)
+        # 8. Wait for generation to complete
         if prompt_id:
-            image_data = get_image(prompt_id)
-            if not image_data:
-                print("⚠️ Impossible de récupérer l'image, passage à l'itération suivante.")
+            generation_completed = wait_for_generation(prompt_id)
+            if not generation_completed:
+                print("⚠️ La confirmation de la génération a échoué ou a expiré, passage à l'itération suivante.")
                 continue
 
 # =======================
