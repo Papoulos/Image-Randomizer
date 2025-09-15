@@ -210,13 +210,33 @@ def get_image(prompt_id):
             res = requests.get(f"{COMFYUI_URL}/history/{prompt_id}")
             res.raise_for_status()
             history = res.json()
+
+            # --- START DEBUGGING ---
+            print(f"DEBUG: Polling history for prompt_id: {prompt_id}")
+            if prompt_id in history:
+                print(f"DEBUG: Found prompt_id in history. Keys: {list(history[prompt_id].keys())}")
+                if 'outputs' in history[prompt_id]:
+                    print("DEBUG: 'outputs' key found.")
+                else:
+                    print("DEBUG: 'outputs' key NOT found in prompt data.")
+            else:
+                print(f"DEBUG: prompt_id not found in history keys: {list(history.keys())}")
+            # --- END DEBUGGING ---
+
             if prompt_id in history and history[prompt_id].get('outputs'):
                 outputs = history[prompt_id]['outputs']
                 for node_id in outputs:
                     if 'images' in outputs[node_id]:
                         img_info = outputs[node_id]['images'][0]
                         img_path = os.path.join(COMFYUI_OUTPUT_DIR, img_info.get('subfolder', ''), img_info['filename'])
-                        if os.path.exists(img_path):
+
+                        # --- START DEBUGGING ---
+                        print(f"DEBUG: Image node found. Constructed path: '{img_path}'")
+                        path_exists = os.path.exists(img_path)
+                        print(f"DEBUG: Path exists? {path_exists}")
+                        # --- END DEBUGGING ---
+
+                        if path_exists:
                             print(f"✅ Image trouvée : {img_path}")
                             with open(img_path, 'rb') as f:
                                 return f.read()
@@ -224,6 +244,12 @@ def get_image(prompt_id):
         except requests.RequestException as e:
             print(f"❌ Erreur de connexion à ComfyUI : {e}")
             return None
+        except json.JSONDecodeError as e:
+            print(f"❌ Erreur de décodage JSON de la réponse de l'historique : {e}")
+            # It's possible the history response is not yet valid JSON
+            time.sleep(2)
+            continue
+
     print("❌ Timeout: L'image n'a pas été générée à temps.")
     return None
 
