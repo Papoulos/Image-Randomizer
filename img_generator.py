@@ -8,6 +8,9 @@ import subprocess
 import datetime
 import argparse
 import base64
+import websocket
+import uuid
+from urllib.parse import urlparse
 
 # Import configuration and prompts
 from config import (
@@ -201,38 +204,51 @@ def queue_prompt(json_filename):
         print(f"❌ Une erreur inattendue est survenue avec curl: {e}")
         return None
 
-def wait_for_generation(prompt_id):
-    """Polls the ComfyUI history and waits for the generation to complete."""
-    print("⏳ En attente de la fin de la génération par ComfyUI...")
+def wait_for_generation_ws(server_address, prompt_id, client_id):
+    """Waits for generation to complete using websockets."""
+    print("⏳ Connexion au websocket et attente de la fin de la génération...")
+
+    ws_url = f"ws://{server_address}/ws?clientId={client_id}"
+    ws = websocket.WebSocket()
+    ws.connect(ws_url)
+
     start_time = time.time()
-    while time.time() - start_time < IMAGE_TIMEOUT:
-        try:
-            res = requests.get(f"{COMFYUI_URL}/history/{prompt_id}")
-            res.raise_for_status()
-            history = res.json()
+    try:
+        while time.time() - start_time < IMAGE_TIMEOUT:
+            try:
+                ws.settimeout(2.0)
+                out = ws.recv()
+                if isinstance(out, str):
+                    message = json.loads(out)
+                    if message['type'] == 'executed':
+                        data = message['data']
+                        if data['prompt_id'] == prompt_id:
+                            print("✅ Génération terminée.")
+                            return True
+                    elif message['type'] == 'executing':
+                        data = message['data']
+                        if data['prompt_id'] == prompt_id and data.get('node') is None:
+                            print("✅ Fin de la file d'attente de génération.")
+                            return True
+            except websocket.WebSocketTimeoutException:
+                continue
+            except json.JSONDecodeError:
+                print("⚠️ Message websocket non-JSON reçu, ignoré.")
+                continue
+    except Exception as e:
+        print(f"❌ Erreur de websocket: {e}")
+        return False
+    finally:
+        ws.close()
 
-            # Check if the prompt is in the history and has outputs, which signals completion.
-            if prompt_id in history and history[prompt_id].get('outputs'):
-                print("✅ Génération terminée.")
-                return True # Signal success
-
-            time.sleep(2) # Poll every 2 seconds
-        except requests.RequestException as e:
-            print(f"❌ Erreur de connexion à ComfyUI : {e}")
-            return False # Signal failure
-        except json.JSONDecodeError:
-            # History might not be ready yet, just wait and retry
-            time.sleep(2)
-            continue
-
-    print("❌ Timeout: La génération n'a pas été confirmée à temps.")
-    return False # Signal failure
+    print("❌ Timeout: La génération n'a pas été confirmée à temps via websocket.")
+    return False
 
 # =======================
 # File Saving
 # =======================
 
-def save_json_workflow(workflow_data, filename):
+def save_json_workflow(workflow_data, filename, client_id):
     """Saves the workflow JSON to the 'jsons' directory with a given filename."""
     JSON_SAVE_DIR = "jsons"
     if not os.path.exists(JSON_SAVE_DIR):
@@ -241,7 +257,7 @@ def save_json_workflow(workflow_data, filename):
     file_path = os.path.join(JSON_SAVE_DIR, filename)
 
     try:
-        api_payload = {"prompt": workflow_data}
+        api_payload = {"prompt": workflow_data, "client_id": client_id}
         with open(file_path, 'w', encoding='utf-8') as f:
             json.dump(api_payload, f, indent=4, ensure_ascii=False)
         print(f"✅ JSON workflow sauvegardé à : {file_path}")
@@ -254,6 +270,9 @@ def save_json_workflow(workflow_data, filename):
 
 def main_generation_loop(config, num_iterations):
     """The main unified generation loop."""
+    parsed_url = urlparse(COMFYUI_URL)
+    server_address = parsed_url.netloc
+
     for i in range(1, num_iterations + 1):
         print(f"\n--- Itération {i}/{num_iterations} ---")
 
@@ -290,14 +309,15 @@ def main_generation_loop(config, num_iterations):
         updated_workflow = update_workflow(workflow, config, prompt, lora)
 
         # 6. Save JSON workflow BEFORE queuing
-        save_json_workflow(updated_workflow, json_filename)
+        client_id = str(uuid.uuid4())
+        save_json_workflow(updated_workflow, json_filename, client_id)
 
         # 7. Queue prompt for generation
         prompt_id = queue_prompt(json_filename)
         
         # 8. Wait for generation to complete
         if prompt_id:
-            generation_completed = wait_for_generation(prompt_id)
+            generation_completed = wait_for_generation_ws(server_address, prompt_id, client_id)
             if not generation_completed:
                 print("⚠️ La confirmation de la génération a échoué ou a expiré, passage à l'itération suivante.")
                 continue
