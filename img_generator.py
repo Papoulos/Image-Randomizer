@@ -204,8 +204,8 @@ def queue_prompt(json_filename):
 def get_image(prompt_id):
     """Polls the ComfyUI history and retrieves the generated image."""
     print("⏳ En attente de la génération de l'image par ComfyUI...")
-    # Poll for IMAGE_TIMEOUT seconds max
-    for _ in range(IMAGE_TIMEOUT // 2):
+    start_time = time.time()
+    while time.time() - start_time < IMAGE_TIMEOUT:
         try:
             res = requests.get(f"{COMFYUI_URL}/history/{prompt_id}")
             res.raise_for_status()
@@ -216,8 +216,8 @@ def get_image(prompt_id):
                     if 'images' in outputs[node_id]:
                         img_info = outputs[node_id]['images'][0]
                         img_path = os.path.join(COMFYUI_OUTPUT_DIR, img_info.get('subfolder', ''), img_info['filename'])
-                        print(f"✅ Image trouvée : {img_path}")
                         if os.path.exists(img_path):
+                            print(f"✅ Image trouvée : {img_path}")
                             with open(img_path, 'rb') as f:
                                 return f.read()
             time.sleep(2)
@@ -296,9 +296,10 @@ def main_generation_loop(config, num_iterations):
         
         # 8. Get the image (path is printed by get_image)
         if prompt_id:
-            get_image(prompt_id)
-        
-        time.sleep(5)
+            image_data = get_image(prompt_id)
+            if not image_data:
+                print("⚠️ Impossible de récupérer l'image, passage à l'itération suivante.")
+                continue
 
 # =======================
 # Entry Point
