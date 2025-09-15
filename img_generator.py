@@ -204,44 +204,59 @@ def queue_prompt(json_filename):
         print(f"❌ Une erreur inattendue est survenue avec curl: {e}")
         return None
 
-def listen_on_websocket(ws, prompt_id):
-    """Listens on an existing websocket for generation to complete."""
-    print("⏳ Attente de la fin de la génération sur le websocket...")
-    start_time = time.time()
+def queue_prompt(prompt_payload):
+    """Queues a prompt on the ComfyUI server using requests."""
     try:
-        while time.time() - start_time < IMAGE_TIMEOUT:
-            try:
-                ws.settimeout(2.0)
-                out = ws.recv()
-                if isinstance(out, str):
-                    message = json.loads(out)
-                    if message['type'] == 'executed':
-                        data = message['data']
-                        if data['prompt_id'] == prompt_id:
-                            print("✅ Génération terminée.")
-                            return True
-                    elif message['type'] == 'executing':
-                        data = message['data']
-                        if data['prompt_id'] == prompt_id and data.get('node') is None:
-                            print("✅ Fin de la file d'attente de génération.")
-                            return True
-            except websocket.WebSocketTimeoutException:
-                continue
-            except json.JSONDecodeError:
-                print("⚠️ Message websocket non-JSON reçu, ignoré.")
-                continue
-    except Exception as e:
-        print(f"❌ Erreur durant l'écoute du websocket: {e}")
-        return False
+        res = requests.post(f"{COMFYUI_URL}/prompt", json=prompt_payload, timeout=30)
+        res.raise_for_status()
+        response_json = res.json()
+        prompt_id = response_json.get('prompt_id')
+        if prompt_id:
+            print(f"✅ Prompt mis en file d'attente avec l'ID : {prompt_id}")
+            return prompt_id
+        else:
+            print(f"❌ Erreur: 'prompt_id' non trouvé dans la réponse de ComfyUI.")
+            print(f"Réponse complète: {res.text}")
+            return None
+    except requests.exceptions.RequestException as e:
+        print(f"❌ Erreur lors de l'envoi du prompt à ComfyUI: {e}")
+        return None
+    except json.JSONDecodeError:
+        print(f"❌ Erreur de décodage JSON. Réponse de ComfyUI: {res.text}")
+        return None
 
-    print("❌ Timeout: La génération n'a pas été confirmée à temps via websocket.")
+def wait_for_generation(prompt_id):
+    """Polls the ComfyUI history and waits for the generation to complete."""
+    print("⏳ En attente de la fin de la génération...")
+    start_time = time.time()
+    while time.time() - start_time < IMAGE_TIMEOUT:
+        try:
+            res = requests.get(f"{COMFYUI_URL}/history/{prompt_id}")
+            res.raise_for_status()
+            data = res.json()
+            if prompt_id in data:
+                outputs = data[prompt_id].get("outputs", {})
+                for node_id in outputs:
+                    if "images" in outputs[node_id]:
+                        print("✅ Génération d'image validée par l'API.")
+                        return True # Found an image output, success!
+
+            time.sleep(10) # Poll every 10 seconds
+
+        except requests.exceptions.RequestException as e:
+            print(f"❌ Erreur de connexion à ComfyUI : {e}")
+            time.sleep(10)
+        except json.JSONDecodeError:
+            time.sleep(10)
+
+    print("❌ Timeout: La génération n'a pas été confirmée à temps.")
     return False
 
 # =======================
 # File Saving
 # =======================
 
-def save_json_workflow(workflow_data, filename, client_id):
+def save_json_workflow(workflow_data, filename):
     """Saves the workflow JSON to the 'jsons' directory with a given filename."""
     JSON_SAVE_DIR = "jsons"
     if not os.path.exists(JSON_SAVE_DIR):
@@ -250,12 +265,15 @@ def save_json_workflow(workflow_data, filename, client_id):
     file_path = os.path.join(JSON_SAVE_DIR, filename)
 
     try:
-        api_payload = {"prompt": workflow_data, "client_id": client_id}
+        # The payload for the API is just the workflow
+        api_payload = {"prompt": workflow_data}
         with open(file_path, 'w', encoding='utf-8') as f:
             json.dump(api_payload, f, indent=4, ensure_ascii=False)
         print(f"✅ JSON workflow sauvegardé à : {file_path}")
+        return api_payload
     except Exception as e:
         print(f"❌ Erreur de sauvegarde du JSON: {e}")
+        return None
 
 # =======================
 # Main Generation Loop
@@ -263,72 +281,54 @@ def save_json_workflow(workflow_data, filename, client_id):
 
 def main_generation_loop(config, num_iterations):
     """The main unified generation loop."""
-    parsed_url = urlparse(COMFYUI_URL)
-    server_address = parsed_url.netloc
-
     for i in range(1, num_iterations + 1):
         print(f"\n--- Itération {i}/{num_iterations} ---")
 
-        # Establish websocket connection
-        client_id = str(uuid.uuid4())
-        ws = websocket.WebSocket()
-        ws_url = f"ws://{server_address}/ws?clientId={client_id}"
+        # 1. Generate unique filenames for this iteration
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        base_filename = f"generated_{timestamp}"
+        json_filename = f"{base_filename}.json"
 
-        try:
-            ws.connect(ws_url)
+        # 2. Load workflow template
+        with open(config['workflow_file'], 'r', encoding='utf-8-sig') as f:
+            workflow_wrapper = json.load(f)
+        workflow = workflow_wrapper.get("prompt")
+        if not workflow:
+            print(f"❌ Erreur: Le fichier workflow '{config['workflow_file']}' ne semble pas être au format API correct.")
+            continue
 
-            # 1. Generate unique filenames for this iteration
-            timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-            base_filename = f"generated_{timestamp}"
-            json_filename = f"{base_filename}.json"
-            image_filename = f"{base_filename}.png"
+        # 3. Generate prompt
+        base_prompt, _ = generate_random_prompt()
+        prompt = generate_prompt_only(base_prompt)
+        if not prompt:
+            print("⚠️ Impossible de générer un prompt, passage à l'itération suivante.")
+            continue
+        print(f"📝 Prompt: {prompt[:100]}...")
 
-            # 2. Load workflow template
-            with open(config['workflow_file'], 'r', encoding='utf-8-sig') as f:
-                workflow_wrapper = json.load(f)
-            workflow = workflow_wrapper.get("prompt")
-            if not workflow:
-                print(f"❌ Erreur: Le fichier workflow '{config['workflow_file']}' ne semble pas être au format API correct.")
+        # 4. Select LoRA
+        lora = select_lora_with_llm(prompt, config)
+        if not lora:
+            print("⚠️ Impossible de sélectionner un LoRA.")
+        else:
+            print(f"🎨 LoRA: {lora}")
+
+        # 5. Update workflow
+        updated_workflow = update_workflow(workflow, config, prompt, lora)
+
+        # 6. Save JSON and get payload for API
+        api_payload = save_json_workflow(updated_workflow, json_filename)
+        if not api_payload:
+            continue
+
+        # 7. Queue prompt for generation
+        prompt_id = queue_prompt(api_payload)
+
+        # 8. Wait for generation to complete
+        if prompt_id:
+            generation_completed = wait_for_generation(prompt_id)
+            if not generation_completed:
+                print("⚠️ La confirmation de la génération a échoué ou a expiré, passage à l'itération suivante.")
                 continue
-
-            # 3. Generate prompt
-            base_prompt, _ = generate_random_prompt()
-            prompt = generate_prompt_only(base_prompt)
-            if not prompt:
-                print("⚠️ Impossible de générer un prompt, passage à l'itération suivante.")
-                continue
-            print(f"📝 Prompt: {prompt[:100]}...")
-
-            # 4. Select LoRA
-            lora = select_lora_with_llm(prompt, config)
-            if not lora:
-                print("⚠️ Impossible de sélectionner un LoRA.")
-            else:
-                print(f"🎨 LoRA: {lora}")
-
-            # 5. Update workflow
-            updated_workflow = update_workflow(workflow, config, prompt, lora)
-
-            # 6. Save JSON workflow BEFORE queuing
-            save_json_workflow(updated_workflow, json_filename, client_id)
-
-            # 7. Queue prompt for generation
-            prompt_id = queue_prompt(json_filename)
-
-            # 8. Wait for generation to complete on the existing websocket
-            if prompt_id:
-                generation_completed = listen_on_websocket(ws, prompt_id)
-                if not generation_completed:
-                    print("⚠️ La confirmation de la génération a échoué ou a expiré, passage à l'itération suivante.")
-                    continue
-
-        except Exception as e:
-            print(f"❌ Une erreur majeure est survenue dans la boucle de génération : {e}")
-            continue # Continue to the next iteration
-        finally:
-            # Ensure the websocket is always closed
-            if ws.connected:
-                ws.close()
 
 # =======================
 # Entry Point
