@@ -192,32 +192,27 @@ def get_image(prompt_id):
 # File Saving
 # =======================
 
-def save_image(image_data, filename_prefix):
-    """Saves image data to the specified save directory."""
+def save_image(image_data, filename):
+    """Saves image data to the specified save directory with a given filename."""
     if not os.path.exists(SAVE_DIR):
         os.makedirs(SAVE_DIR)
-    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = f"{filename_prefix}_{timestamp}.png"
     image_path = os.path.join(SAVE_DIR, filename)
     try:
         with open(image_path, 'wb') as f:
             f.write(image_data)
         print(f"✅ Image sauvegardée à : {image_path}")
-        return filename
+        return True
     except Exception as e:
         print(f"❌ Erreur de sauvegarde: {e}")
-        return None
+        return False
 
-def save_json_workflow(workflow_data, image_filename):
-    """Saves the workflow JSON to the 'jsons' directory, named after the image."""
-    if not image_filename: return
-
+def save_json_workflow(workflow_data, filename):
+    """Saves the workflow JSON to the 'jsons' directory with a given filename."""
     JSON_SAVE_DIR = "jsons"
     if not os.path.exists(JSON_SAVE_DIR):
         os.makedirs(JSON_SAVE_DIR)
 
-    json_filename = os.path.splitext(os.path.basename(image_filename))[0] + ".json"
-    file_path = os.path.join(JSON_SAVE_DIR, json_filename)
+    file_path = os.path.join(JSON_SAVE_DIR, filename)
 
     try:
         api_payload = {"prompt": workflow_data}
@@ -236,17 +231,21 @@ def main_generation_loop(config, num_iterations):
     for i in range(1, num_iterations + 1):
         print(f"\n--- Itération {i}/{num_iterations} ---")
 
-        # 1. Load workflow template
+        # 1. Generate unique filenames for this iteration
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        base_filename = f"generated_{timestamp}"
+        json_filename = f"{base_filename}.json"
+        image_filename = f"{base_filename}.png"
+
+        # 2. Load workflow template
         with open(config['workflow_file'], 'r', encoding='utf-8-sig') as f:
             workflow_wrapper = json.load(f)
-
-        # The API format wraps the workflow in a "prompt" key. We need to extract it.
         workflow = workflow_wrapper.get("prompt")
         if not workflow:
-            print(f"❌ Erreur: Le fichier workflow '{config['workflow_file']}' ne semble pas être au format API correct (clé 'prompt' manquante).")
+            print(f"❌ Erreur: Le fichier workflow '{config['workflow_file']}' ne semble pas être au format API correct.")
             continue
 
-        # 2. Generate prompt
+        # 3. Generate prompt
         base_prompt, _ = generate_random_prompt()
         prompt = generate_prompt_only(base_prompt)
         if not prompt:
@@ -254,24 +253,27 @@ def main_generation_loop(config, num_iterations):
             continue
         print(f"📝 Prompt: {prompt[:100]}...")
 
-        # 3. Select LoRA
+        # 4. Select LoRA
         lora = select_lora_with_llm(prompt, config)
         if not lora:
             print("⚠️ Impossible de sélectionner un LoRA.")
         else:
             print(f"🎨 LoRA: {lora}")
 
-        # 4. Update workflow and queue for generation
+        # 5. Update workflow
         updated_workflow = update_workflow(workflow, config, prompt, lora)
+
+        # 6. Save JSON workflow BEFORE queuing
+        save_json_workflow(updated_workflow, json_filename)
+
+        # 7. Queue prompt for generation
         prompt_id = queue_prompt(updated_workflow)
         
-        # 5. Get and save the image
+        # 8. Get and save the image
         if prompt_id:
             image_data = get_image(prompt_id)
             if image_data:
-                image_filename = save_image(image_data, "generated")
-                if image_filename:
-                    save_json_workflow(updated_workflow, image_filename)
+                save_image(image_data, image_filename)
         
         time.sleep(5)
 
