@@ -8,9 +8,6 @@ import subprocess
 import datetime
 import argparse
 import base64
-import websocket
-import uuid
-from urllib.parse import urlparse
 
 # Import configuration and prompts
 from config import (
@@ -204,53 +201,31 @@ def queue_prompt(json_filename):
         print(f"❌ Une erreur inattendue est survenue avec curl: {e}")
         return None
 
-def queue_prompt(prompt_payload):
-    """Queues a prompt on the ComfyUI server using requests."""
-    try:
-        res = requests.post(f"{COMFYUI_URL}/prompt", json=prompt_payload, timeout=30)
-        res.raise_for_status()
-        response_json = res.json()
-        prompt_id = response_json.get('prompt_id')
-        if prompt_id:
-            print(f"✅ Prompt mis en file d'attente avec l'ID : {prompt_id}")
-            return prompt_id
-        else:
-            print(f"❌ Erreur: 'prompt_id' non trouvé dans la réponse de ComfyUI.")
-            print(f"Réponse complète: {res.text}")
-            return None
-    except requests.exceptions.RequestException as e:
-        print(f"❌ Erreur lors de l'envoi du prompt à ComfyUI: {e}")
-        return None
-    except json.JSONDecodeError:
-        print(f"❌ Erreur de décodage JSON. Réponse de ComfyUI: {res.text}")
-        return None
-
-def wait_for_generation(prompt_id):
-    """Polls the ComfyUI history and waits for the generation to complete."""
-    print("⏳ En attente de la fin de la génération...")
-    start_time = time.time()
-    while time.time() - start_time < IMAGE_TIMEOUT:
+def get_image(prompt_id):
+    """Polls the ComfyUI history and retrieves the generated image."""
+    print("⏳ En attente de la génération de l'image par ComfyUI...")
+    # Poll for IMAGE_TIMEOUT seconds max
+    for _ in range(IMAGE_TIMEOUT // 2):
         try:
             res = requests.get(f"{COMFYUI_URL}/history/{prompt_id}")
             res.raise_for_status()
-            data = res.json()
-            if prompt_id in data:
-                outputs = data[prompt_id].get("outputs", {})
+            history = res.json()
+            if prompt_id in history and history[prompt_id].get('outputs'):
+                outputs = history[prompt_id]['outputs']
                 for node_id in outputs:
-                    if "images" in outputs[node_id]:
-                        print("✅ Génération d'image validée par l'API.")
-                        return True # Found an image output, success!
-
-            time.sleep(10) # Poll every 10 seconds
-
-        except requests.exceptions.RequestException as e:
+                    if 'images' in outputs[node_id]:
+                        img_info = outputs[node_id]['images'][0]
+                        img_path = os.path.join(COMFYUI_OUTPUT_DIR, img_info.get('subfolder', ''), img_info['filename'])
+                        print(f"✅ Image trouvée : {img_path}")
+                        if os.path.exists(img_path):
+                            with open(img_path, 'rb') as f:
+                                return f.read()
+            time.sleep(2)
+        except requests.RequestException as e:
             print(f"❌ Erreur de connexion à ComfyUI : {e}")
-            time.sleep(10)
-        except json.JSONDecodeError:
-            time.sleep(10)
-
-    print("❌ Timeout: La génération n'a pas été confirmée à temps.")
-    return False
+            return None
+    print("❌ Timeout: L'image n'a pas été générée à temps.")
+    return None
 
 # =======================
 # File Saving
@@ -265,15 +240,12 @@ def save_json_workflow(workflow_data, filename):
     file_path = os.path.join(JSON_SAVE_DIR, filename)
 
     try:
-        # The payload for the API is just the workflow
         api_payload = {"prompt": workflow_data}
         with open(file_path, 'w', encoding='utf-8') as f:
             json.dump(api_payload, f, indent=4, ensure_ascii=False)
         print(f"✅ JSON workflow sauvegardé à : {file_path}")
-        return api_payload
     except Exception as e:
         print(f"❌ Erreur de sauvegarde du JSON: {e}")
-        return None
 
 # =======================
 # Main Generation Loop
@@ -288,6 +260,7 @@ def main_generation_loop(config, num_iterations):
         timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
         base_filename = f"generated_{timestamp}"
         json_filename = f"{base_filename}.json"
+        image_filename = f"{base_filename}.png"
 
         # 2. Load workflow template
         with open(config['workflow_file'], 'r', encoding='utf-8-sig') as f:
@@ -315,20 +288,15 @@ def main_generation_loop(config, num_iterations):
         # 5. Update workflow
         updated_workflow = update_workflow(workflow, config, prompt, lora)
 
-        # 6. Save JSON and get payload for API
-        api_payload = save_json_workflow(updated_workflow, json_filename)
-        if not api_payload:
-            continue
+        # 6. Save JSON workflow BEFORE queuing
+        save_json_workflow(updated_workflow, json_filename)
 
         # 7. Queue prompt for generation
-        prompt_id = queue_prompt(api_payload)
+        prompt_id = queue_prompt(json_filename)
 
-        # 8. Wait for generation to complete
+        # 8. Get the image (path is printed by get_image)
         if prompt_id:
-            generation_completed = wait_for_generation(prompt_id)
-            if not generation_completed:
-                print("⚠️ La confirmation de la génération a échoué ou a expiré, passage à l'itération suivante.")
-                continue
+            get_image(prompt_id)
 
 # =======================
 # Entry Point
