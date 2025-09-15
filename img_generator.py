@@ -181,7 +181,6 @@ def get_image(prompt_id):
                         if os.path.exists(img_path):
                             with open(img_path, 'rb') as f:
                                 return f.read()
-                return None # Still processing
             time.sleep(2)
         except requests.RequestException as e:
             print(f"❌ Erreur de connexion à ComfyUI : {e}")
