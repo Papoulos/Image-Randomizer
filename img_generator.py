@@ -226,10 +226,10 @@ def queue_prompt(json_filename):
         print(f"❌ Une erreur inattendue est survenue: {e}")
         return None
 
-def get_image_from_websocket(prompt_id):
+def get_image_from_websocket(prompt_id, all_node_ids):
     """
-    Connects to the ComfyUI WebSocket, waits for generation to complete,
-    fetches the result via the HTTP /history endpoint, and returns the image data.
+    Connects to the ComfyUI WebSocket, waits for generation to complete by tracking
+    all nodes, fetches the result via HTTP, and returns the image data.
     """
     client_id = str(uuid.uuid4())
     ws_url = f"ws://{COMFYUI_URL.split('//')[1]}/ws?clientId={client_id}"
@@ -244,51 +244,69 @@ def get_image_from_websocket(prompt_id):
         return None
 
     start_time = time.time()
+    finished_nodes = set()
+    total_nodes = len(all_node_ids)
 
     try:
-        # WebSocket loop to track execution status
         while True:
             elapsed_time = time.time() - start_time
             if elapsed_time > IMAGE_TIMEOUT:
-                print("❌ Timeout: La génération de l'image via WebSocket a dépassé le temps imparti.")
-                return None
+                print("❌ Timeout: La génération de l'image a dépassé le temps imparti.")
+                break # Exit loop to try fetching history anyway
 
             try:
                 ws.settimeout(2.0)
                 out_str = ws.recv()
             except websocket.WebSocketTimeoutException:
-                continue # Expected, to check the main timeout
+                continue
             except websocket.WebSocketConnectionClosedException:
                 print("❌ La connexion WebSocket a été fermée prématurément.")
-                # It might have finished, so we can try to get the history.
                 break
 
             if isinstance(out_str, str):
                 message = json.loads(out_str)
-                if message['type'] == 'executing':
-                    data = message['data']
-                    # The 'executing' message with a null node ID signifies the end of the execution.
-                    if data.get('node') is None and data['prompt_id'] == prompt_id:
-                        print("✅ Exécution terminée.")
-                        break # Exit the loop, execution is complete.
-                elif message['type'] == 'progress':
-                    data = message['data']
-                    print(f"⏳ Progression : {data['value']}/{data['max']} ({(data['value']/data['max'])*100:.1f}%)")
+                msg_type = message.get('type')
+                data = message.get('data', {})
+
+                if data.get('prompt_id') != prompt_id:
+                    continue # Ignore messages from other prompts
+
+                if msg_type == 'executed':
+                    node_id = data.get('node')
+                    if node_id and node_id not in finished_nodes:
+                        finished_nodes.add(node_id)
+                        print(f"✅ Nœud terminé : {node_id} ({len(finished_nodes)}/{total_nodes})")
+
+                elif msg_type == 'execution_cached':
+                    cached_nodes = data.get('nodes', [])
+                    for node_id in cached_nodes:
+                        if node_id not in finished_nodes:
+                            finished_nodes.add(node_id)
+                            print(f"✅ Nœud (cache) : {node_id} ({len(finished_nodes)}/{total_nodes})")
+
+                elif msg_type == 'progress':
+                    value = data.get('value', 0)
+                    max_val = data.get('max', 0)
+                    if max_val > 0:
+                        print(f"⏳ Progression : {value}/{max_val} ({(value/max_val)*100:.1f}%)")
+
+                # Check for completion
+                if len(finished_nodes) >= total_nodes:
+                    print("🏁 Tous les nœuds ont été exécutés.")
+                    break
 
     except Exception as e:
         print(f"❌ Une erreur est survenue pendant la communication WebSocket: {e}")
-        # Even with an error, we might be able to fetch the history if it completed.
     finally:
         if ws.connected:
             ws.close()
             print("🔌 Connexion WebSocket fermée.")
 
-    # After execution finishes (or we think it did), get the image from history
+    # After execution finishes, get the image from history
     print("📋 Récupération de l'historique...")
     try:
         history_url = f"{COMFYUI_URL}/history/{prompt_id}"
-        # Give ComfyUI a moment to write the history
-        time.sleep(1)
+        time.sleep(1) # Give ComfyUI a moment to write the history
         response = requests.get(history_url)
         response.raise_for_status()
         history = response.json()
@@ -302,22 +320,18 @@ def get_image_from_websocket(prompt_id):
         for node_id in outputs:
             if 'images' in outputs[node_id]:
                 for img_info in outputs[node_id]['images']:
-                    # We only care about the final output image
                     if img_info['type'] == 'output':
                         img_path = os.path.join(COMFYUI_OUTPUT_DIR, img_info.get('subfolder', ''), img_info['filename'])
-
-                        # Wait a moment for the file to be fully written
                         time.sleep(1)
-
                         if os.path.exists(img_path):
                             print(f"✅ Image trouvée : {img_path}")
                             with open(img_path, 'rb') as f:
                                 return f.read()
                         else:
-                            print(f"❌ Erreur : Fichier image non trouvé à l'emplacement attendu : {img_path}")
+                            print(f"❌ Erreur : Fichier image non trouvé : {img_path}")
                             return None
 
-        print("❌ Aucune image de type 'output' trouvée dans les sorties de l'historique.")
+        print("❌ Aucune image de type 'output' trouvée dans l'historique.")
         return None
 
     except requests.RequestException as e:
@@ -396,7 +410,9 @@ def main_generation_loop(config, num_iterations):
 
         # 8. Get the image (path is printed by get_image_from_websocket)
         if prompt_id:
-            image_data = get_image_from_websocket(prompt_id)
+            # The keys of the workflow dictionary are the node IDs
+            node_ids = list(updated_workflow.keys())
+            image_data = get_image_from_websocket(prompt_id, node_ids)
             if image_data:
                 # Optionnel : Sauvegarder l'image localement si nécessaire
                 # Par exemple, en utilisant le `image_filename` généré plus tôt
