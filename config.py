@@ -23,7 +23,7 @@ FLUX_CONFIG = {
             "Luminous_Shadowscape-Flux.safetensors", "Phandigrams_II.safetensors",
             "Alex_Vede.safetensors"
         ],
-        "HF": ["FluxDFaeTasticDetails.safetensors", "dark_fantasy_flux.safetensors", "Ev_Ganin_IV.safetensors"],
+        "HF": ["FluxDFaeTasticDetails.safetensors", "Ev_Ganin_IV.safetensors"],
         "DH": ["dark_fantasy_flux.safetensors"],
         "SF": ["Mecha-flux.safetensors","Xuer - FLUX.safetensors"]
     }
