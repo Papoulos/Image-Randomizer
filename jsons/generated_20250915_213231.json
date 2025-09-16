@@ -1,0 +1,147 @@
+{
+    "prompt": {
+        "3": {
+            "inputs": {
+                "seed": 0,
+                "steps": 20,
+                "cfg": 7,
+                "sampler_name": "dpmpp_2m",
+                "scheduler": "karras",
+                "denoise": 1,
+                "model": [
+                    "10",
+                    0
+                ],
+                "positive": [
+                    "6",
+                    0
+                ],
+                "negative": [
+                    "7",
+                    0
+                ],
+                "latent_image": [
+                    "5",
+                    0
+                ]
+            },
+            "class_type": "KSampler",
+            "_meta": {
+                "title": "KSampler"
+            }
+        },
+        "4": {
+            "inputs": {
+                "ckpt_name": "albedobaseXL_v31Large.safetensors"
+            },
+            "class_type": "CheckpointLoaderSimple",
+            "_meta": {
+                "title": "Charger Point de Contrôle"
+            }
+        },
+        "5": {
+            "inputs": {
+                "width": 1024,
+                "height": 1024,
+                "batch_size": 1
+            },
+            "class_type": "EmptyLatentImage",
+            "_meta": {
+                "title": "Image Latente Vide"
+            }
+        },
+        "6": {
+            "inputs": {
+                "text": "(a beautiful warrior princess:1.5), riding a white horse, on a hill, cinematic, photorealistic",
+                "clip": [
+                    "10",
+                    1
+                ]
+            },
+            "class_type": "CLIPTextEncode",
+            "_meta": {
+                "title": "CLIP Text Encode (Prompt)"
+            }
+        },
+        "7": {
+            "inputs": {
+                "text": "",
+                "clip": [
+                    "10",
+                    1
+                ]
+            },
+            "class_type": "CLIPTextEncode",
+            "_meta": {
+                "title": "CLIP Text Encode (Prompt)"
+            }
+        },
+        "8": {
+            "inputs": {
+                "samples": [
+                    "3",
+                    0
+                ],
+                "vae": [
+                    "4",
+                    2
+                ]
+            },
+            "class_type": "VAEDecode",
+            "_meta": {
+                "title": "VAE Decode"
+            }
+        },
+        "9": {
+            "inputs": {
+                "filename_prefix": "2loras_test_",
+                "images": [
+                    "8",
+                    0
+                ]
+            },
+            "class_type": "SaveImage",
+            "_meta": {
+                "title": "Enregistrer Image"
+            }
+        },
+        "10": {
+            "inputs": {
+                "lora_name": "gopXL.safetensors",
+                "strength_model": 0.8,
+                "strength_clip": 1,
+                "model": [
+                    "11",
+                    0
+                ],
+                "clip": [
+                    "11",
+                    1
+                ]
+            },
+            "class_type": "LoraLoader",
+            "_meta": {
+                "title": "Charger LoRA"
+            }
+        },
+        "11": {
+            "inputs": {
+                "lora_name": "Adjust_SDXL_v4.0.safetensors",
+                "strength_model": 0.9,
+                "strength_clip": 1,
+                "model": [
+                    "4",
+                    0
+                ],
+                "clip": [
+                    "4",
+                    1
+                ]
+            },
+            "class_type": "LoraLoader",
+            "_meta": {
+                "title": "Charger LoRA"
+            }
+        }
+    }
+}

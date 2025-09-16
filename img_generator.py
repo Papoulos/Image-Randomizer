@@ -8,6 +8,8 @@ import subprocess
 import datetime
 import argparse
 import base64
+import websocket
+import uuid
 
 # Import configuration and prompts
 from config import (
@@ -39,13 +41,18 @@ def kill_ollama():
             proc.kill()
 
 def start_ollama():
+    # NOTE: This function requires the 'ollama' executable to be in the system's PATH.
     if is_server_alive(f"http://127.0.0.1:{OLLAMA_PORT}"):
         return True
 
     if not is_process_running("ollama"):
         print("🚀 Démarrage d'Ollama...")
-        subprocess.Popen(["ollama", "serve"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        time.sleep(5)
+        try:
+            subprocess.Popen(["ollama", "serve"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            time.sleep(5)
+        except FileNotFoundError:
+            print("❌ Erreur: La commande 'ollama' est introuvable. Veuillez l'installer et vous assurer qu'elle est dans votre PATH.")
+            return False
 
     for _ in range(MAX_RETRIES):
         if is_server_alive(f"http://127.0.0.1:{OLLAMA_PORT}"):
@@ -152,80 +159,120 @@ def update_workflow(workflow_data, config, prompt, lora_name):
     return workflow_data
 
 def queue_prompt(json_filename):
-    """Queues a prompt on the ComfyUI server using curl."""
+    """Queues a prompt on the ComfyUI server using the requests library."""
     json_filepath = os.path.join("jsons", json_filename)
 
     if not os.path.exists(json_filepath):
         print(f"❌ Erreur: Fichier workflow '{json_filepath}' non trouvé.")
         return None
 
-    command = [
-        "curl",
-        "-X", "POST",
-        "--silent",
-        "--data", f"@{json_filepath}",
-        f"{COMFYUI_URL}/prompt"
-    ]
-
     try:
-        result = subprocess.run(
-            command,
-            capture_output=True,
-            text=True,
-            check=True,
-            timeout=30,
-            encoding='utf-8'
-        )
-        response_json = json.loads(result.stdout)
+        with open(json_filepath, 'r', encoding='utf-8') as f:
+            prompt_data = json.load(f)
+
+        headers = {'Content-Type': 'application/json'}
+        response = requests.post(f"{COMFYUI_URL}/prompt", json=prompt_data, headers=headers, timeout=30)
+        response.raise_for_status() # Lève une exception pour les codes d'erreur HTTP
+
+        response_json = response.json()
         prompt_id = response_json.get('prompt_id')
+
         if prompt_id:
             print(f"✅ Prompt mis en file d'attente avec l'ID : {prompt_id}")
             return prompt_id
         else:
             print(f"❌ Erreur: 'prompt_id' non trouvé dans la réponse de ComfyUI.")
-            print(f"Réponse complète: {result.stdout}")
+            print(f"Réponse complète: {response.text}")
             return None
-    except subprocess.CalledProcessError as e:
-        print(f"❌ Erreur lors de l'appel curl à ComfyUI.")
-        print(f"Stderr: {e.stderr}")
-        if e.stdout:
-            print(f"Stdout: {e.stdout}")
-        return None
-    except subprocess.TimeoutExpired:
-        print("⚠️ Timeout: curl a mis trop de temps à répondre.")
+
+    except requests.exceptions.RequestException as e:
+        print(f"❌ Erreur lors de la communication avec le serveur ComfyUI: {e}")
         return None
     except json.JSONDecodeError:
-        print(f"❌ Erreur de décodage JSON. Réponse de ComfyUI: {result.stdout}")
+        print(f"❌ Erreur de décodage JSON en lisant '{json_filepath}'.")
         return None
     except Exception as e:
-        print(f"❌ Une erreur inattendue est survenue avec curl: {e}")
+        print(f"❌ Une erreur inattendue est survenue: {e}")
         return None
 
-def get_image(prompt_id):
-    """Polls the ComfyUI history and retrieves the generated image."""
-    print("⏳ En attente de la génération de l'image par ComfyUI...")
-    # Poll for IMAGE_TIMEOUT seconds max
-    for _ in range(IMAGE_TIMEOUT // 2):
-        try:
-            res = requests.get(f"{COMFYUI_URL}/history/{prompt_id}")
-            res.raise_for_status()
-            history = res.json()
-            if prompt_id in history and history[prompt_id].get('outputs'):
-                outputs = history[prompt_id]['outputs']
-                for node_id in outputs:
-                    if 'images' in outputs[node_id]:
-                        img_info = outputs[node_id]['images'][0]
-                        img_path = os.path.join(COMFYUI_OUTPUT_DIR, img_info.get('subfolder', ''), img_info['filename'])
-                        if os.path.exists(img_path):
-                            print(f"✅ Image trouvée : {img_path}")
-                            with open(img_path, 'rb') as f:
-                                return f.read()
-            time.sleep(2)
-        except requests.RequestException as e:
-            print(f"❌ Erreur de connexion à ComfyUI : {e}")
-            return None
-    print("❌ Timeout: L'image n'a pas été générée à temps.")
-    return None
+def get_image_from_websocket(prompt_id):
+    """
+    Connects to the ComfyUI WebSocket and waits for the image generation to complete.
+    Returns the image data as bytes.
+    """
+    client_id = str(uuid.uuid4())
+    ws_url = f"ws://{COMFYUI_URL.split('//')[1]}/ws?clientId={client_id}"
+
+    print(f"📡 Connexion au WebSocket : {ws_url}")
+    ws = websocket.WebSocket()
+    try:
+        ws.connect(ws_url)
+        print("✅ Connexion WebSocket établie.")
+    except Exception as e:
+        print(f"❌ Erreur de connexion WebSocket : {e}")
+        return None
+
+    start_time = time.time()
+
+    try:
+        while True:
+            # Set a timeout for receiving data
+            elapsed_time = time.time() - start_time
+            if elapsed_time > IMAGE_TIMEOUT:
+                print("❌ Timeout: L'image n'a pas été générée à temps via WebSocket.")
+                return None
+
+            try:
+                # Set a receive timeout to avoid blocking indefinitely
+                # This makes the loop check the elapsed_time more regularly
+                ws.settimeout(2.0)
+                out_str = ws.recv()
+            except websocket.WebSocketTimeoutException:
+                # This is expected, just continue to the next iteration
+                # to check the main timeout.
+                continue
+            except websocket.WebSocketConnectionClosedException:
+                print("❌ La connexion WebSocket a été fermée.")
+                return None
+
+
+            if isinstance(out_str, str):
+                message = json.loads(out_str)
+                if message['type'] == 'executing':
+                    data = message['data']
+                    if data['node'] is None and data['prompt_id'] == prompt_id:
+                        print("🏃‍♂️ Exécution du prompt démarrée...")
+                elif message['type'] == 'executed':
+                    data = message['data']
+                    if data['prompt_id'] == prompt_id:
+                        print("✅ Exécution terminée.")
+                        outputs = data.get('output', {})
+                        for node_id in outputs:
+                            if 'images' in outputs[node_id]:
+                                img_info = outputs[node_id]['images'][0]
+                                img_path = os.path.join(COMFYUI_OUTPUT_DIR, img_info.get('subfolder', ''), img_info['filename'])
+
+                                # Wait a moment for the file to be fully written
+                                time.sleep(1)
+
+                                if os.path.exists(img_path):
+                                    print(f"✅ Image trouvée : {img_path}")
+                                    with open(img_path, 'rb') as f:
+                                        return f.read()
+                                else:
+                                    print(f"❌ Erreur : Fichier image non trouvé à l'emplacement attendu : {img_path}")
+                                    return None
+                elif message['type'] == 'progress':
+                    data = message['data']
+                    print(f"⏳ Progression : {data['value']}/{data['max']} ({(data['value']/data['max'])*100:.1f}%)")
+
+    except Exception as e:
+        print(f"❌ Une erreur est survenue pendant la communication WebSocket: {e}")
+        return None
+    finally:
+        if ws.connected:
+            ws.close()
+            print("🔌 Connexion WebSocket fermée.")
 
 # =======================
 # File Saving
@@ -294,9 +341,19 @@ def main_generation_loop(config, num_iterations):
         # 7. Queue prompt for generation
         prompt_id = queue_prompt(json_filename)
 
-        # 8. Get the image (path is printed by get_image)
+        # 8. Get the image (path is printed by get_image_from_websocket)
         if prompt_id:
-            get_image(prompt_id)
+            image_data = get_image_from_websocket(prompt_id)
+            if image_data:
+                # Optionnel : Sauvegarder l'image localement si nécessaire
+                # Par exemple, en utilisant le `image_filename` généré plus tôt
+                save_path = os.path.join(SAVE_DIR, image_filename)
+                try:
+                    with open(save_path, 'wb') as f:
+                        f.write(image_data)
+                    print(f"🖼️  Image finale sauvegardée dans le script à : {save_path}")
+                except Exception as e:
+                    print(f"❌ Erreur lors de la sauvegarde de l'image finale : {e}")
 
 # =======================
 # Entry Point
