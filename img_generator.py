@@ -8,7 +8,6 @@ import subprocess
 import datetime
 import argparse
 import base64
-import websocket
 import uuid
 
 # Import configuration and prompts
@@ -226,120 +225,72 @@ def queue_prompt(json_filename):
         print(f"❌ Une erreur inattendue est survenue: {e}")
         return None
 
-def get_image_from_websocket(prompt_id, all_node_ids):
+def get_image_by_polling(prompt_id):
     """
-    Connects to the ComfyUI WebSocket, waits for generation to complete by tracking
-    all nodes, fetches the result via HTTP, and returns the image data.
+    Waits for image generation by polling the ComfyUI history endpoint.
+    Includes an initial delay as requested.
     """
-    client_id = str(uuid.uuid4())
-    ws_url = f"ws://{COMFYUI_URL.split('//')[1]}/ws?clientId={client_id}"
-
-    print(f"📡 Connexion au WebSocket : {ws_url}")
-    ws = websocket.WebSocket()
-    try:
-        ws.connect(ws_url)
-        print("✅ Connexion WebSocket établie.")
-    except Exception as e:
-        print(f"❌ Erreur de connexion WebSocket : {e}")
-        return None
-
     start_time = time.time()
-    finished_nodes = set()
-    total_nodes = len(all_node_ids)
+    history_url = f"{COMFYUI_URL}/history/{prompt_id}"
 
-    try:
-        while True:
-            elapsed_time = time.time() - start_time
-            if elapsed_time > IMAGE_TIMEOUT:
-                print("❌ Timeout: La génération de l'image a dépassé le temps imparti.")
-                break # Exit loop to try fetching history anyway
+    # --- Initial Wait ---
+    print("⏳ Attente initiale de 100 secondes avant le début du polling...")
+    time.sleep(100)
+    print("Polling de l'historique démarré...")
 
-            try:
-                ws.settimeout(2.0)
-                out_str = ws.recv()
-            except websocket.WebSocketTimeoutException:
-                continue
-            except websocket.WebSocketConnectionClosedException:
-                print("❌ La connexion WebSocket a été fermée prématurément.")
-                break
-
-            if isinstance(out_str, str):
-                message = json.loads(out_str)
-                msg_type = message.get('type')
-                data = message.get('data', {})
-
-                if data.get('prompt_id') != prompt_id:
-                    continue # Ignore messages from other prompts
-
-                if msg_type == 'executed':
-                    node_id = data.get('node')
-                    if node_id and node_id not in finished_nodes:
-                        finished_nodes.add(node_id)
-                        print(f"✅ Nœud terminé : {node_id} ({len(finished_nodes)}/{total_nodes})")
-
-                elif msg_type == 'execution_cached':
-                    cached_nodes = data.get('nodes', [])
-                    for node_id in cached_nodes:
-                        if node_id not in finished_nodes:
-                            finished_nodes.add(node_id)
-                            print(f"✅ Nœud (cache) : {node_id} ({len(finished_nodes)}/{total_nodes})")
-
-                elif msg_type == 'progress':
-                    value = data.get('value', 0)
-                    max_val = data.get('max', 0)
-                    if max_val > 0:
-                        print(f"⏳ Progression : {value}/{max_val} ({(value/max_val)*100:.1f}%)")
-
-                # Check for completion
-                if len(finished_nodes) >= total_nodes:
-                    print("🏁 Tous les nœuds ont été exécutés.")
-                    break
-
-    except Exception as e:
-        print(f"❌ Une erreur est survenue pendant la communication WebSocket: {e}")
-    finally:
-        if ws.connected:
-            ws.close()
-            print("🔌 Connexion WebSocket fermée.")
-
-    # After execution finishes, get the image from history
-    print("📋 Récupération de l'historique...")
-    try:
-        history_url = f"{COMFYUI_URL}/history/{prompt_id}"
-        time.sleep(1) # Give ComfyUI a moment to write the history
-        response = requests.get(history_url)
-        response.raise_for_status()
-        history = response.json()
-
-        if prompt_id not in history:
-            print(f"❌ Erreur: ID de prompt '{prompt_id}' non trouvé dans l'historique.")
+    while True:
+        # --- Check for Timeout ---
+        elapsed_time = time.time() - start_time
+        if elapsed_time > IMAGE_TIMEOUT:
+            print(f"❌ Timeout: La génération de l'image a dépassé les {IMAGE_TIMEOUT} secondes.")
             return None
 
-        prompt_history = history[prompt_id]
-        outputs = prompt_history.get('outputs', {})
-        for node_id in outputs:
-            if 'images' in outputs[node_id]:
-                for img_info in outputs[node_id]['images']:
-                    if img_info['type'] == 'output':
-                        img_path = os.path.join(COMFYUI_OUTPUT_DIR, img_info.get('subfolder', ''), img_info['filename'])
-                        time.sleep(1)
-                        if os.path.exists(img_path):
-                            print(f"✅ Image trouvée : {img_path}")
-                            with open(img_path, 'rb') as f:
-                                return f.read()
-                        else:
-                            print(f"❌ Erreur : Fichier image non trouvé : {img_path}")
-                            return None
+        try:
+            # --- Poll History Endpoint ---
+            response = requests.get(history_url)
+            response.raise_for_status()
+            history = response.json()
 
-        print("❌ Aucune image de type 'output' trouvée dans l'historique.")
-        return None
+            # --- Check if Prompt is in History ---
+            if prompt_id in history:
+                print(f"✅ Historique trouvé pour le prompt_id : {prompt_id}")
+                prompt_history = history[prompt_id]
+                outputs = prompt_history.get('outputs', {})
 
-    except requests.RequestException as e:
-        print(f"❌ Erreur lors de la récupération de l'historique : {e}")
-        return None
-    except Exception as e:
-        print(f"❌ Une erreur inattendue est survenue lors du traitement de l'historique : {e}")
-        return None
+                # --- Find the Output Image ---
+                for node_id in outputs:
+                    if 'images' in outputs[node_id]:
+                        for img_info in outputs[node_id]['images']:
+                            if img_info.get('type') == 'output':
+                                filename = img_info['filename']
+                                subfolder = img_info.get('subfolder', '')
+                                img_path = os.path.join(COMFYUI_OUTPUT_DIR, subfolder, filename)
+
+                                print(f"Image potentielle trouvée : {img_path}")
+
+                                # Wait a moment for the file to be fully written
+                                time.sleep(2)
+
+                                if os.path.exists(img_path):
+                                    print(f"✅ Image confirmée et trouvée : {img_path}")
+                                    with open(img_path, 'rb') as f:
+                                        return f.read()
+                                else:
+                                    print(f"❌ Erreur critique : Fichier image listé dans l'historique mais non trouvé sur le disque : {img_path}")
+                                    return None
+
+                print("❌ Aucune image de type 'output' trouvée dans l'historique, bien que l'historique existe.")
+                return None # History found, but no image output.
+
+        except requests.RequestException as e:
+            # This can happen if the server is busy, not an error yet.
+            print(f"⌛ Le serveur ComfyUI n'est pas encore prêt ou occupé. Réessai dans 10 secondes. Erreur: {e}")
+        except Exception as e:
+            print(f"❌ Une erreur inattendue est survenue lors du polling : {e}")
+            return None # Hard error, stop polling.
+
+        # --- Wait Before Next Poll ---
+        time.sleep(10)
 
 # =======================
 # File Saving
@@ -408,13 +359,11 @@ def main_generation_loop(config, num_iterations):
         # 7. Queue prompt for generation
         prompt_id = queue_prompt(json_filename)
 
-        # 8. Get the image (path is printed by get_image_from_websocket)
+        # 8. Get the image using the new polling method
         if prompt_id:
-            # The keys of the workflow dictionary are the node IDs
-            node_ids = list(updated_workflow.keys())
-            image_data = get_image_from_websocket(prompt_id, node_ids)
+            image_data = get_image_by_polling(prompt_id)
             if image_data:
-                # Optionnel : Sauvegarder l'image localement si nécessaire
+                # Optional: Save the image locally if needed
                 # Par exemple, en utilisant le `image_filename` généré plus tôt
                 save_path = os.path.join(SAVE_DIR, image_filename)
                 try:
