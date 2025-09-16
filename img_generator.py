@@ -228,8 +228,8 @@ def queue_prompt(json_filename):
 
 def get_image_from_websocket(prompt_id):
     """
-    Connects to the ComfyUI WebSocket and waits for the image generation to complete.
-    Returns the image data as bytes.
+    Connects to the ComfyUI WebSocket, waits for generation to complete,
+    fetches the result via the HTTP /history endpoint, and returns the image data.
     """
     client_id = str(uuid.uuid4())
     ws_url = f"ws://{COMFYUI_URL.split('//')[1]}/ws?clientId={client_id}"
@@ -246,64 +246,86 @@ def get_image_from_websocket(prompt_id):
     start_time = time.time()
 
     try:
+        # WebSocket loop to track execution status
         while True:
-            # Set a timeout for receiving data
             elapsed_time = time.time() - start_time
             if elapsed_time > IMAGE_TIMEOUT:
-                print("❌ Timeout: L'image n'a pas été générée à temps via WebSocket.")
+                print("❌ Timeout: La génération de l'image via WebSocket a dépassé le temps imparti.")
                 return None
 
             try:
-                # Set a receive timeout to avoid blocking indefinitely
-                # This makes the loop check the elapsed_time more regularly
                 ws.settimeout(2.0)
                 out_str = ws.recv()
             except websocket.WebSocketTimeoutException:
-                # This is expected, just continue to the next iteration
-                # to check the main timeout.
-                continue
+                continue # Expected, to check the main timeout
             except websocket.WebSocketConnectionClosedException:
-                print("❌ La connexion WebSocket a été fermée.")
-                return None
-
+                print("❌ La connexion WebSocket a été fermée prématurément.")
+                # It might have finished, so we can try to get the history.
+                break
 
             if isinstance(out_str, str):
                 message = json.loads(out_str)
                 if message['type'] == 'executing':
                     data = message['data']
-                    if data['node'] is None and data['prompt_id'] == prompt_id:
-                        print("🏃‍♂️ Exécution du prompt démarrée...")
-                elif message['type'] == 'executed':
-                    data = message['data']
-                    if data['prompt_id'] == prompt_id:
+                    # The 'executing' message with a null node ID signifies the end of the execution.
+                    if data.get('node') is None and data['prompt_id'] == prompt_id:
                         print("✅ Exécution terminée.")
-                        outputs = data.get('output', {})
-                        for node_id in outputs:
-                            if 'images' in outputs[node_id]:
-                                img_info = outputs[node_id]['images'][0]
-                                img_path = os.path.join(COMFYUI_OUTPUT_DIR, img_info.get('subfolder', ''), img_info['filename'])
-
-                                # Wait a moment for the file to be fully written
-                                time.sleep(1)
-
-                                if os.path.exists(img_path):
-                                    print(f"✅ Image trouvée : {img_path}")
-                                    with open(img_path, 'rb') as f:
-                                        return f.read()
-                                else:
-                                    print(f"❌ Erreur : Fichier image non trouvé à l'emplacement attendu : {img_path}")
-                                    return None
+                        break # Exit the loop, execution is complete.
                 elif message['type'] == 'progress':
                     data = message['data']
                     print(f"⏳ Progression : {data['value']}/{data['max']} ({(data['value']/data['max'])*100:.1f}%)")
 
     except Exception as e:
         print(f"❌ Une erreur est survenue pendant la communication WebSocket: {e}")
-        return None
+        # Even with an error, we might be able to fetch the history if it completed.
     finally:
         if ws.connected:
             ws.close()
             print("🔌 Connexion WebSocket fermée.")
+
+    # After execution finishes (or we think it did), get the image from history
+    print("📋 Récupération de l'historique...")
+    try:
+        history_url = f"{COMFYUI_URL}/history/{prompt_id}"
+        # Give ComfyUI a moment to write the history
+        time.sleep(1)
+        response = requests.get(history_url)
+        response.raise_for_status()
+        history = response.json()
+
+        if prompt_id not in history:
+            print(f"❌ Erreur: ID de prompt '{prompt_id}' non trouvé dans l'historique.")
+            return None
+
+        prompt_history = history[prompt_id]
+        outputs = prompt_history.get('outputs', {})
+        for node_id in outputs:
+            if 'images' in outputs[node_id]:
+                for img_info in outputs[node_id]['images']:
+                    # We only care about the final output image
+                    if img_info['type'] == 'output':
+                        img_path = os.path.join(COMFYUI_OUTPUT_DIR, img_info.get('subfolder', ''), img_info['filename'])
+
+                        # Wait a moment for the file to be fully written
+                        time.sleep(1)
+
+                        if os.path.exists(img_path):
+                            print(f"✅ Image trouvée : {img_path}")
+                            with open(img_path, 'rb') as f:
+                                return f.read()
+                        else:
+                            print(f"❌ Erreur : Fichier image non trouvé à l'emplacement attendu : {img_path}")
+                            return None
+
+        print("❌ Aucune image de type 'output' trouvée dans les sorties de l'historique.")
+        return None
+
+    except requests.RequestException as e:
+        print(f"❌ Erreur lors de la récupération de l'historique : {e}")
+        return None
+    except Exception as e:
+        print(f"❌ Une erreur inattendue est survenue lors du traitement de l'historique : {e}")
+        return None
 
 # =======================
 # File Saving
