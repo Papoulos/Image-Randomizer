@@ -125,12 +125,43 @@ Traitez la description suivante :
     return call_ollama(prompt_template, base_prompt)
 
 def select_lora_with_llm(prompt, config):
-    """Selects the most appropriate LoRA for a given prompt."""
+    """
+    Selects the most appropriate LoRA for a given prompt using an LLM,
+    then finds the exact matching filename.
+    """
     all_loras = list(set(lora for loras in config["lora_themes"].values() for lora in loras))
-    if not all_loras: return None
+    if not all_loras:
+        return None
 
+    # Ask the LLM for a suggestion
     prompt_template = 'From the following list, which LoRA is most thematically appropriate for the prompt below? Respond with ONLY the name of the LoRA.\n\nLoRA List: {1}\n\nPrompt: "{0}"'
-    return call_ollama(prompt_template, (prompt, all_loras))
+    llm_suggestion = call_ollama(prompt_template, (prompt, all_loras))
+
+    if not llm_suggestion:
+        print("⚠️ Le LLM n'a pas suggéré de LoRA.")
+        return None
+
+    # Clean up the suggestion
+    # Remove common extensions and surrounding quotes
+    suggestion_clean = llm_suggestion.replace(".safetensors", "").replace(".safetensor", "").strip().strip('"')
+
+    print(f"🧠 Suggestion du LLM pour le LoRA : '{llm_suggestion}' (nettoyé : '{suggestion_clean}')")
+
+    # Find potential matches
+    # We look for filenames that contain the cleaned suggestion
+    possible_matches = [lora for lora in all_loras if suggestion_clean.lower() in lora.lower()]
+
+    # Check for a unique match
+    if len(possible_matches) == 1:
+        found_lora = possible_matches[0]
+        print(f"✅ LoRA trouvé par correspondance unique : {found_lora}")
+        return found_lora
+    elif len(possible_matches) > 1:
+        print(f"⚠️ Ambiguïté : La suggestion '{suggestion_clean}' correspond à plusieurs LoRAs : {possible_matches}. Aucun LoRA ne sera utilisé.")
+        return None
+    else:
+        print(f"❌ Aucun LoRA correspondant à la suggestion '{suggestion_clean}' n'a été trouvé. Aucun LoRA ne sera utilisé.")
+        return None
 
 # =======================
 # ComfyUI API Interaction
