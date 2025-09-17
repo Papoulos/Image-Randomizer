@@ -2,21 +2,21 @@
   "3": {
     "inputs": {
       "seed": 0,
-      "steps": 20,
+      "steps": 30,
       "cfg": 7,
       "sampler_name": "dpmpp_2m",
       "scheduler": "karras",
       "denoise": 1,
       "model": [
-        "10",
+        "11",
         0
       ],
       "positive": [
-        "6",
+        "7",
         0
       ],
       "negative": [
-        "7",
+        "15",
         0
       ],
       "latent_image": [
@@ -40,8 +40,8 @@
   },
   "5": {
     "inputs": {
-      "width": 1024,
-      "height": 1024,
+      "width": 768,
+      "height": 768,
       "batch_size": 1
     },
     "class_type": "EmptyLatentImage",
@@ -49,9 +49,9 @@
       "title": "Image Latente Vide"
     }
   },
-  "6": {
+    "6": {
     "inputs": {
-      "text": "Un grenouille dans une forêt",
+      "text": "Une grenouille dans une forêt",
       "clip": [
         "10",
         1
@@ -66,7 +66,7 @@
     "inputs": {
       "text": "",
       "clip": [
-        "10",
+        "11",
         1
       ]
     },
@@ -93,7 +93,7 @@
   },
   "9": {
     "inputs": {
-      "filename_prefix": "2loras_test_",
+      "filename_prefix": "IMG_",
       "images": [
         "8",
         0
@@ -104,17 +104,17 @@
       "title": "Enregistrer Image"
     }
   },
-  "10": {
+  "11": {
     "inputs": {
-      "lora_name": "gopXL.safetensors",
-      "strength_model": 0.8,
+      "lora_name": "detailed texture+.safetensors",
+      "strength_model": 0.75,
       "strength_clip": 1,
       "model": [
-        "11",
+        "4",
         0
       ],
       "clip": [
-        "11",
+        "4",
         1
       ]
     },
@@ -123,23 +123,17 @@
       "title": "Charger LoRA"
     }
   },
-  "11": {
+  "15": {
     "inputs": {
-      "lora_name": "Adjust_SDXL_v4.0.safetensors",
-      "strength_model": 0.9,
-      "strength_clip": 1,
-      "model": [
-        "4",
-        0
-      ],
+      "text": "(worst quality, low quality:1.4), (bad anatomy), text, error, missing fingers, extra digit, fewer digits, cropped, jpeg artifacts, signature, watermark, username, blurry, deformed face",
       "clip": [
-        "4",
+        "11",
         1
       ]
     },
-    "class_type": "LoraLoader",
+    "class_type": "CLIPTextEncode",
     "_meta": {
-      "title": "Charger LoRA"
+      "title": "CLIP Text Encode (Prompt)"
     }
   }
 }
