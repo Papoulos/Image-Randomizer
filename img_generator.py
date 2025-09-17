@@ -189,7 +189,7 @@ def update_workflow(workflow_data, config, prompt, lora_name):
     return workflow_data
 
 def queue_prompt(json_filename):
-    """Queues a prompt on the ComfyUI server using the requests library."""
+    """Queues a prompt on the ComfyUI server using a direct curl command."""
     json_filepath = os.path.join("jsons", json_filename)
 
     if not os.path.exists(json_filepath):
@@ -197,29 +197,40 @@ def queue_prompt(json_filename):
         return None
 
     try:
-        with open(json_filepath, 'r', encoding='utf-8') as f:
-            prompt_data = json.load(f)
+        # Construct the curl command
+        # The '@' tells curl to read the data from the specified file
+        command = [
+            "curl",
+            "-s",  # Silent mode to prevent progress meter
+            "-X", "POST",
+            "--data", f"@{json_filepath}",
+            f"{COMFYUI_URL}/prompt"
+        ]
 
-        headers = {'Content-Type': 'application/json'}
-        response = requests.post(f"{COMFYUI_URL}/prompt", json=prompt_data, headers=headers, timeout=30)
-        response.raise_for_status() # Lève une exception pour les codes d'erreur HTTP
+        print(f"▶️  Exécution de la commande : {' '.join(command)}")
 
-        response_json = response.json()
+        # Execute the command
+        result = subprocess.run(command, capture_output=True, text=True, check=True, encoding='utf-8')
+
+        # Parse the JSON response from curl's stdout
+        response_json = json.loads(result.stdout)
         prompt_id = response_json.get('prompt_id')
 
         if prompt_id:
             print(f"✅ Prompt mis en file d'attente avec l'ID : {prompt_id}")
             return prompt_id
         else:
-            print(f"❌ Erreur: 'prompt_id' non trouvé dans la réponse de ComfyUI.")
-            print(f"Réponse complète: {response.text}")
+            print("❌ Erreur: 'prompt_id' non trouvé dans la réponse de ComfyUI via curl.")
+            print(f"Réponse complète: {result.stdout}")
             return None
 
-    except requests.exceptions.RequestException as e:
-        print(f"❌ Erreur lors de la communication avec le serveur ComfyUI: {e}")
+    except subprocess.CalledProcessError as e:
+        print(f"❌ Erreur lors de l'exécution de la commande curl: {e}")
+        print(f"Stderr: {e.stderr}")
         return None
     except json.JSONDecodeError:
-        print(f"❌ Erreur de décodage JSON en lisant '{json_filepath}'.")
+        print(f"❌ Erreur de décodage JSON en lisant la sortie de curl.")
+        print(f"Sortie reçue: {result.stdout}")
         return None
     except Exception as e:
         print(f"❌ Une erreur inattendue est survenue: {e}")
@@ -234,8 +245,8 @@ def get_image_by_polling(prompt_id):
     history_url = f"{COMFYUI_URL}/history/{prompt_id}"
 
     # --- Initial Wait ---
-    print("⏳ Attente initiale de 100 secondes avant le début du polling...")
-    time.sleep(100)
+    print("⏳ Attente initiale de 10 secondes avant le début du polling...")
+    time.sleep(10)
     print("Polling de l'historique démarré...")
 
     while True:
