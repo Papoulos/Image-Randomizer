@@ -245,8 +245,8 @@ def get_image_by_polling(prompt_id):
     history_url = f"{COMFYUI_URL}/history/{prompt_id}"
 
     # --- Initial Wait ---
-    print("⏳ Attente initiale de 10 secondes avant le début du polling...")
-    time.sleep(10)
+    print("⏳ Attente initiale de 100 secondes avant le début du polling...")
+    time.sleep(100)
     print("Polling de l'historique démarré...")
 
     while True:
