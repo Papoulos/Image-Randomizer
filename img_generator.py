@@ -327,7 +327,7 @@ def save_json_workflow(workflow_data, filename):
 # Main Generation Loop
 # =======================
 
-def main_generation_loop(config, num_iterations, prompt_choice):
+def main_generation_loop(config, num_iterations):
     """The main unified generation loop."""
     for i in range(1, num_iterations + 1):
         print(f"\n--- Itération {i}/{num_iterations} ---")
@@ -347,6 +347,9 @@ def main_generation_loop(config, num_iterations, prompt_choice):
             continue
 
         # 3. Generate prompt
+        prompt_choice = random.choice(Prompt_list)
+        print(f"Choix du prompt : {prompt_choice}")
+
         if prompt_choice == "Random prompt":
             print("🎲 Génération d'un prompt aléatoire...")
             base_prompt, _ = generate_random_prompt()
@@ -396,7 +399,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Générateur d'images unifié via ComfyUI.")
     parser.add_argument("--flux", action="store_true", help="Utiliser le workflow Flux au lieu de SDXL.")
     parser.add_argument("--iterations", type=int, default=10, help="Nombre d'itérations de génération.")
-    parser.add_argument("--prompt", dest="prompt_choice", type=str, default="Random prompt", choices=Prompt_list, help="Choix du prompt à utiliser.")
     args = parser.parse_args()
 
     active_config = FLUX_CONFIG if args.flux else SDXL_CONFIG
@@ -404,4 +406,4 @@ if __name__ == "__main__":
 
     print(f"🚀 Démarrage du générateur d'images en mode {model_type} via ComfyUI.")
 
-    main_generation_loop(active_config, args.iterations, args.prompt_choice)
+    main_generation_loop(active_config, args.iterations)
