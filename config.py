@@ -59,5 +59,7 @@ IMAGE_TIMEOUT = 500
 # Liste de prompts de base
 # =======================
 Prompt_list = [
-    "Random prompt"
+    "Random prompt",
+    "glowing jellyfish floating in a surreal, bioluminescent underwater cave, cinematic lighting, photorealistic",
+    "a lone astronaut discovering an ancient alien artifact on a desolate moon, detailed suit, cosmic horror style"
 ]
