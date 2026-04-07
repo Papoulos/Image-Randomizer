@@ -214,12 +214,13 @@ def update_workflow(workflow_data, config, prompt, lora_name):
         print(f"❌ Erreur: Noeud de prompt ID '{prompt_node_id}' non trouvé dans le workflow.")
 
     # Update the LoRA name in the specified node, if a LoRA is provided
-    if lora_name and lora_node_id in workflow_data:
-        workflow_data[lora_node_id]["inputs"]["lora_name"] = lora_name
-        print(f"✅ LoRA '{lora_name}' injecté dans le noeud {lora_node_id}.")
-    elif lora_name:
-        # This case handles when a lora_name is available but the node ID is not found
-        print(f"❌ Erreur: Noeud de LoRA ID '{lora_node_id}' non trouvé dans le workflow.")
+    if lora_name and lora_node_id:
+        if lora_node_id in workflow_data:
+            workflow_data[lora_node_id]["inputs"]["lora_name"] = lora_name
+            print(f"✅ LoRA '{lora_name}' injecté dans le noeud {lora_node_id}.")
+        else:
+            # This case handles when a lora_name is available but the node ID is not found
+            print(f"❌ Erreur: Noeud de LoRA ID '{lora_node_id}' non trouvé dans le workflow.")
 
     return workflow_data
 
