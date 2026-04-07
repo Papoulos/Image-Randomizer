@@ -13,7 +13,8 @@ import uuid
 # Import configuration and prompts
 from config import (
     SAVE_DIR, OL_models, Prompt_list, OLLAMA_PORT, MAX_RETRIES, TIMEOUT,
-    SDXL_CONFIG, FLUX_CONFIG, COMFYUI_URL, COMFYUI_OUTPUT_DIR, IMAGE_TIMEOUT
+    SDXL_CONFIG, FLUX_CONFIG, COMFYUI_URL, COMFYUI_OUTPUT_DIR, IMAGE_TIMEOUT,
+    LLM_PROVIDER, LLAMA_CPP_CONFIG
 )
 from prompts import generate_random_prompt
 
@@ -63,22 +64,17 @@ def start_ollama():
     return False
 
 # =======================
-# Prompt & LoRA Generation (Ollama)
+# Prompt & LoRA Generation (LLM)
 # =======================
 
-def call_ollama(prompt_template, input_data):
-    """Generic function to call Ollama LLM."""
+def call_ollama(prompt):
+    """Specific function to call Ollama via CLI."""
     if not start_ollama(): return None
     
     command = ["ollama", "run", OL_models[0]]
-    if isinstance(input_data, tuple):
-        full_prompt = prompt_template.format(*input_data)
-    else:
-        full_prompt = prompt_template.format(input_data)
-
     try:
         process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding="utf-8")
-        output, error = process.communicate(input=full_prompt, timeout=60)
+        output, error = process.communicate(input=prompt, timeout=TIMEOUT)
         if process.returncode == 0:
             return output.strip()
         else:
@@ -87,6 +83,45 @@ def call_ollama(prompt_template, input_data):
     except subprocess.TimeoutExpired:
         print("⚠️ Timeout: Ollama a mis trop de temps à répondre.")
         process.kill()
+        return None
+
+def call_llama_cpp(prompt):
+    """Specific function to call Llama-cpp via OpenAI compatible API."""
+    try:
+        headers = {"Content-Type": "application/json"}
+        payload = {
+            "model": LLAMA_CPP_CONFIG["model"],
+            "messages": [
+                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "user", "content": prompt}
+            ],
+            "temperature": 0.7,
+            "stream": False
+        }
+        response = requests.post(LLAMA_CPP_CONFIG["url"], headers=headers, json=payload, timeout=TIMEOUT)
+        response.raise_for_status()
+        result = response.json()
+        return result['choices'][0]['message']['content'].strip()
+    except requests.RequestException as e:
+        print(f"❌ Erreur Llama-cpp: {e}")
+        return None
+    except (KeyError, IndexError):
+        print("❌ Erreur: Format de réponse Llama-cpp inattendu.")
+        return None
+
+def call_llm(prompt_template, input_data):
+    """Generic function to call the configured LLM provider."""
+    if isinstance(input_data, tuple):
+        full_prompt = prompt_template.format(*input_data)
+    else:
+        full_prompt = prompt_template.format(input_data)
+
+    if LLM_PROVIDER == "ollama":
+        return call_ollama(full_prompt)
+    elif LLM_PROVIDER == "llama_cpp":
+        return call_llama_cpp(full_prompt)
+    else:
+        print(f"❌ Erreur: Fournisseur LLM '{LLM_PROVIDER}' non supporté.")
         return None
 
 def generate_prompt_only(base_prompt):
@@ -121,7 +156,7 @@ Suivez impérativement ces règles pour créer le prompt final :
 
 Traitez la description suivante :
 {}"""
-    return call_ollama(prompt_template, base_prompt)
+    return call_llm(prompt_template, base_prompt)
 
 def select_lora_with_llm(prompt, config):
     """
@@ -134,7 +169,7 @@ def select_lora_with_llm(prompt, config):
 
     # Ask the LLM for a suggestion
     prompt_template = 'From the following list, which LoRA is most thematically appropriate for the prompt below? Respond with ONLY the name of the LoRA.\n\nLoRA List: {1}\n\nPrompt: "{0}"'
-    llm_suggestion = call_ollama(prompt_template, (prompt, all_loras))
+    llm_suggestion = call_llm(prompt_template, (prompt, all_loras))
 
     if not llm_suggestion:
         print("⚠️ Le LLM n'a pas suggéré de LoRA.")
