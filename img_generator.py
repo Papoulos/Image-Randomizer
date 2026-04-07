@@ -205,6 +205,7 @@ def update_workflow(workflow_data, config, prompt, lora_name):
     """Robustly updates the ComfyUI API workflow dictionary."""
     prompt_node_id = config["prompt_node_id"]
     lora_node_id = config["lora_node_id"]
+    sampler_node_id = config.get("sampler_node_id")
 
     # Update the prompt text in the specified node
     if prompt_node_id in workflow_data:
@@ -212,6 +213,14 @@ def update_workflow(workflow_data, config, prompt, lora_name):
         print(f"✅ Prompt injecté dans le noeud {prompt_node_id}.")
     else:
         print(f"❌ Erreur: Noeud de prompt ID '{prompt_node_id}' non trouvé dans le workflow.")
+
+    # Update the seed with a random value
+    if sampler_node_id and sampler_node_id in workflow_data:
+        new_seed = random.randint(1, 10**14)
+        workflow_data[sampler_node_id]["inputs"]["seed"] = new_seed
+        print(f"🎲 Seed aléatoire injecté dans le noeud {sampler_node_id} : {new_seed}")
+    elif sampler_node_id:
+        print(f"❌ Erreur: Noeud de sampler ID '{sampler_node_id}' non trouvé dans le workflow.")
 
     # Update the LoRA name in the specified node, if a LoRA is provided
     if lora_name and lora_node_id:
@@ -281,8 +290,8 @@ def get_image_by_polling(prompt_id):
     history_url = f"{COMFYUI_URL}/history/{prompt_id}"
 
     # --- Initial Wait ---
-    print("⏳ Attente initiale de 100 secondes avant le début du polling...")
-    time.sleep(100)
+    print("⏳ Attente initiale de 20 secondes avant le début du polling...")
+    time.sleep(20)
     print("Polling de l'historique démarré...")
 
     while True:

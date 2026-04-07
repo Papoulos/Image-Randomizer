@@ -14,6 +14,7 @@ COMFYUI_OUTPUT_DIR = "G:\\ComfyUI\\output\\"
 FLUX_CONFIG = {
     "workflow_file": "flux_workflow.json",
     "prompt_node_id": "41:45",
+    "sampler_node_id": "41:31",
     "lora_node_id": None,
     "lora_themes": {
         "Neutre": [
@@ -33,6 +34,7 @@ FLUX_CONFIG = {
 SDXL_CONFIG = {
     "workflow_file": "sdxl_workflow.json",
     "prompt_node_id": "6",
+    "sampler_node_id": "3",
     # NOTE: Ce workflow a deux LoRAs. Nous ciblons le premier (style).
     "lora_node_id": "11",
     "lora_themes": {
