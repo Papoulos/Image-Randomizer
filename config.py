@@ -47,10 +47,21 @@ SDXL_CONFIG = {
 }
 
 # =======================
-# Configuration d'Ollama (pour l'amélioration des prompts)
+# Configuration de l'LLM (pour l'amélioration des prompts)
 # =======================
+# Options : "ollama", "llama_cpp"
+LLM_PROVIDER = "ollama"
+
+# --- Configuration d'Ollama ---
 OL_models = ['gemma3']
 OLLAMA_PORT = 11434
+
+# --- Configuration de llama-cpp (API compatible OpenAI) ---
+LLAMA_CPP_CONFIG = {
+    "url": "http://127.0.0.1:8080/v1/chat/completions",
+    "model": "gemma-2-9b-it-Q4_K_M.gguf"
+}
+
 MAX_RETRIES = 20
 TIMEOUT = 60
 IMAGE_TIMEOUT = 500
