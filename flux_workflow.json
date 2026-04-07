@@ -1,127 +1,130 @@
-{"prompt": {
-  "6": {
-    "inputs": {
-      "text": "Un grenouille dans une forêt",
-      "clip": [
-        "38",
-        1
-      ]
+{
+  "prompt": {
+    "9": {
+      "inputs": {
+        "filename_prefix": "ComfyUI",
+        "images": [
+          "41:8",
+          0
+        ]
+      },
+      "class_type": "SaveImage",
+      "_meta": {
+        "title": "Enregistrer Image"
+      }
     },
-    "class_type": "CLIPTextEncode",
-    "_meta": {
-      "title": "CLIP Text Encode (Positive Prompt)"
-    }
-  },
-  "8": {
-    "inputs": {
-      "samples": [
-        "31",
-        0
-      ],
-      "vae": [
-        "30",
-        2
-      ]
+    "41:39": {
+      "inputs": {
+        "vae_name": "ae.safetensors"
+      },
+      "class_type": "VAELoader",
+      "_meta": {
+        "title": "Charger VAE"
+      }
     },
-    "class_type": "VAEDecode",
-    "_meta": {
-      "title": "VAE Decode"
-    }
-  },
-  "9": {
-    "inputs": {
-      "filename_prefix": "ComfyUI",
-      "images": [
-        "8",
-        0
-      ]
+    "41:38": {
+      "inputs": {
+        "unet_name": "flux1-dev.safetensors",
+        "weight_dtype": "default"
+      },
+      "class_type": "UNETLoader",
+      "_meta": {
+        "title": "Charger Modèle Diffusion"
+      }
     },
-    "class_type": "SaveImage",
-    "_meta": {
-      "title": "Enregistrer Image"
-    }
-  },
-  "27": {
-    "inputs": {
-      "width": 1024,
-      "height": 1024,
-      "batch_size": 1
+    "41:42": {
+      "inputs": {
+        "conditioning": [
+          "41:45",
+          0
+        ]
+      },
+      "class_type": "ConditioningZeroOut",
+      "_meta": {
+        "title": "ConditioningZeroOut"
+      }
     },
-    "class_type": "EmptySD3LatentImage",
-    "_meta": {
-      "title": "EmptySD3LatentImage"
-    }
-  },
-  "30": {
-    "inputs": {
-      "ckpt_name": "flux1-schnell-fp8.safetensors"
+    "41:8": {
+      "inputs": {
+        "samples": [
+          "41:31",
+          0
+        ],
+        "vae": [
+          "41:39",
+          0
+        ]
+      },
+      "class_type": "VAEDecode",
+      "_meta": {
+        "title": "VAE Decode"
+      }
     },
-    "class_type": "CheckpointLoaderSimple",
-    "_meta": {
-      "title": "Charger Point de Contrôle"
-    }
-  },
-  "31": {
-    "inputs": {
-      "seed": 0,
-      "steps": 4,
-      "cfg": 1,
-      "sampler_name": "euler",
-      "scheduler": "simple",
-      "denoise": 1,
-      "model": [
-        "38",
-        0
-      ],
-      "positive": [
-        "6",
-        0
-      ],
-      "negative": [
-        "33",
-        0
-      ],
-      "latent_image": [
-        "27",
-        0
-      ]
+    "41:43": {
+      "inputs": {
+        "clip_name1": "clip_l.safetensors",
+        "clip_name2": "t5xxl_fp16.safetensors",
+        "type": "flux",
+        "device": "default"
+      },
+      "class_type": "DualCLIPLoader",
+      "_meta": {
+        "title": "ChargeurDualCLIP"
+      }
     },
-    "class_type": "KSampler",
-    "_meta": {
-      "title": "KSampler"
-    }
-  },
-  "33": {
-    "inputs": {
-      "text": "",
-      "clip": [
-        "30",
-        1
-      ]
+    "41:45": {
+      "inputs": {
+        "text": "beautiful photography of a gorgeous-haired artist, she is natural, having her hair in a casual bun, looking happily into camera, cinematic",
+        "clip": [
+          "41:43",
+          0
+        ]
+      },
+      "class_type": "CLIPTextEncode",
+      "_meta": {
+        "title": "CLIP Text Encode (Prompt)"
+      }
     },
-    "class_type": "CLIPTextEncode",
-    "_meta": {
-      "title": "CLIP Text Encode (Negative Prompt)"
-    }
-  },
-  "38": {
-    "inputs": {
-      "lora_name": "gopFLUX.safetensors",
-      "strength_model": 0.85,
-      "strength_clip": 1,
-      "model": [
-        "30",
-        0
-      ],
-      "clip": [
-        "30",
-        1
-      ]
+    "41:27": {
+      "inputs": {
+        "width": 1024,
+        "height": 1024,
+        "batch_size": 1
+      },
+      "class_type": "EmptySD3LatentImage",
+      "_meta": {
+        "title": "EmptySD3LatentImage"
+      }
     },
-    "class_type": "LoraLoader",
-    "_meta": {
-      "title": "Charger LoRA"
+    "41:31": {
+      "inputs": {
+        "seed": 33674443647248,
+        "steps": 20,
+        "cfg": 1,
+        "sampler_name": "euler",
+        "scheduler": "simple",
+        "denoise": 1,
+        "model": [
+          "41:38",
+          0
+        ],
+        "positive": [
+          "41:45",
+          0
+        ],
+        "negative": [
+          "41:42",
+          0
+        ],
+        "latent_image": [
+          "41:27",
+          0
+        ]
+      },
+      "class_type": "KSampler",
+      "_meta": {
+        "title": "KSampler"
+      }
     }
   }
-}
 }
