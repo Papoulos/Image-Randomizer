@@ -13,9 +13,9 @@ COMFYUI_OUTPUT_DIR = "G:\\ComfyUI\\output\\"
 # --- Configuration du modèle FLUX (via ComfyUI) ---
 FLUX_CONFIG = {
     "workflow_file": "flux_workflow.json",
-    "prompt_node_id": "41:45",
-    "sampler_node_id": "41:31",
-    "lora_node_id": None,
+    "prompt_node_id": "76",
+    "sampler_node_id": "75:73",
+    "lora_node_id": "75:98",
     "lora_themes": {
         "Neutre": [
             "aidmaFLUXPro1.1-FLUX-v0.3.safetensors",

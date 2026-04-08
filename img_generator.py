@@ -209,7 +209,12 @@ def update_workflow(workflow_data, config, prompt, lora_name):
 
     # Update the prompt text in the specified node
     if prompt_node_id in workflow_data:
-        workflow_data[prompt_node_id]["inputs"]["text"] = prompt
+        # Check if the node uses 'text' (default) or 'value' (Primitive nodes)
+        if "text" in workflow_data[prompt_node_id]["inputs"]:
+            workflow_data[prompt_node_id]["inputs"]["text"] = prompt
+        elif "value" in workflow_data[prompt_node_id]["inputs"]:
+            workflow_data[prompt_node_id]["inputs"]["value"] = prompt
+
         print(f"✅ Prompt injecté dans le noeud {prompt_node_id}.")
     else:
         print(f"❌ Erreur: Noeud de prompt ID '{prompt_node_id}' non trouvé dans le workflow.")
@@ -217,7 +222,12 @@ def update_workflow(workflow_data, config, prompt, lora_name):
     # Update the seed with a random value
     if sampler_node_id and sampler_node_id in workflow_data:
         new_seed = random.randint(1, 10**14)
-        workflow_data[sampler_node_id]["inputs"]["seed"] = new_seed
+        # Check if the node uses 'seed' or 'noise_seed'
+        if "seed" in workflow_data[sampler_node_id]["inputs"]:
+            workflow_data[sampler_node_id]["inputs"]["seed"] = new_seed
+        elif "noise_seed" in workflow_data[sampler_node_id]["inputs"]:
+            workflow_data[sampler_node_id]["inputs"]["noise_seed"] = new_seed
+
         print(f"🎲 Seed aléatoire injecté dans le noeud {sampler_node_id} : {new_seed}")
     elif sampler_node_id:
         print(f"❌ Erreur: Noeud de sampler ID '{sampler_node_id}' non trouvé dans le workflow.")
