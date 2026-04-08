@@ -13,7 +13,7 @@ import uuid
 # Import configuration and prompts
 from config import (
     SAVE_DIR, OL_models, Prompt_list, OLLAMA_PORT, MAX_RETRIES, TIMEOUT,
-    SDXL_CONFIG, FLUX_CONFIG, COMFYUI_URL, COMFYUI_OUTPUT_DIR, IMAGE_TIMEOUT,
+    SDXL_CONFIG, FLUX_CONFIG, ZIT_CONFIG, COMFYUI_URL, COMFYUI_OUTPUT_DIR, IMAGE_TIMEOUT,
     LLM_PROVIDER, LLAMA_CPP_CONFIG
 )
 from prompts import generate_random_prompt
@@ -452,12 +452,21 @@ def main_generation_loop(config, num_iterations):
 # =======================
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Générateur d'images unifié via ComfyUI.")
-    parser.add_argument("--flux", action="store_true", help="Utiliser le workflow Flux au lieu de SDXL.")
+    parser.add_argument("--flux", action="store_true", help="Utiliser le workflow Flux.")
+    parser.add_argument("--zit", action="store_true", help="Utiliser le workflow ZIT.")
+    parser.add_argument("--sdxl", action="store_true", help="Utiliser le workflow SDXL (par défaut).")
     parser.add_argument("--iterations", type=int, default=10, help="Nombre d'itérations de génération.")
     args = parser.parse_args()
 
-    active_config = FLUX_CONFIG if args.flux else SDXL_CONFIG
-    model_type = "Flux" if args.flux else "SDXL"
+    if args.flux:
+        active_config = FLUX_CONFIG
+        model_type = "Flux"
+    elif args.zit:
+        active_config = ZIT_CONFIG
+        model_type = "ZIT"
+    else:
+        active_config = SDXL_CONFIG
+        model_type = "SDXL"
 
     print(f"🚀 Démarrage du générateur d'images en mode {model_type} via ComfyUI.")
 

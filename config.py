@@ -48,6 +48,19 @@ SDXL_CONFIG = {
     }
 }
 
+# --- Configuration du modèle ZIT (via ComfyUI) ---
+ZIT_CONFIG = {
+    "workflow_file": "zit_workflow.json",
+    "prompt_node_id": "104:90",
+    "sampler_node_id": "104:92",
+    "lora_node_id": "104:105",
+    "lora_themes": {
+        "Neutre": [
+            "ZIT - Dark Katana E8.safetensors"
+        ]
+    }
+}
+
 # =======================
 # Configuration de l'LLM (pour l'amélioration des prompts)
 # =======================
