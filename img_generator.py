@@ -126,34 +126,41 @@ def call_llm(prompt_template, input_data):
 
 def generate_prompt_only(base_prompt):
     """Generates a detailed prompt without LoRA syntax."""
-    prompt_template = """You are an expert in creating prompts for generative image AIs like Stable Diffusion XL and Flux. Your goal is to transform a simple scene description into a rich, fluid, and effective descriptive paragraph. The prompt must be written in the form of natural sentences, visually evocative, and optimized for high-quality image generation.
+    prompt_template = """You are an expert prompt engineer for advanced generative image AIs like Stable Diffusion XL and Flux. Your goal is to transform a list of disconnected keywords and scene elements into a rich, cohesive, and highly evocative descriptive paragraph.
 
-You will receive a base description containing key elements (subject, action, location, etc.).
+You will receive a base description containing key elements (subject, action, location, atmosphere, etc.).
 
-You must strictly follow these rules to create the final prompt:
+Strictly follow these rules:
 
-1.  **Prompt Structure:**
-    *   The final prompt must be a single block of text, **in English**, written as fluid descriptive sentences.
-    *   Organize the prompt in this logical order:
-        1.  **Subject and Action:** Describe the main subject performing their action.
-        2.  **Detailed Description:** Add details about the subject (clothing, appearance, expression).
-        3.  **Setting and Environment:** Describe the setting, background, and contextual elements.
-        4.  **Atmosphere and Lighting:** Integrate the mood, lighting, and composition of the scene.
-        5.  **Artistic Style:** Specify the artistic style at the end (e.g., `photorealistic`, `oil painting`, `anime style`, `cinematic`).
+Prompt Structure & Flow:
 
-2.  **No Weight Tags:**
-    *   Do **not use any parentheses or numerical weights** (e.g., no `:1.5` or `(subject:1.2)`). Use rich vocabulary to emphasize important elements.
+The prompt must be a single block of text, in English, written in fluid, grammatically correct sentences. Do not use lists or bullet points.
 
-3.  **Creative Enrichment:**
-    *   Inject **one or two creative and coherent details** that are not in the initial description to enrich the scene (e.g., a weather detail, a particular object, a texture).
+Follow this logical flow: Main Subject & Action -> Detailed Appearance -> Environment & Background -> Lighting & Atmosphere -> Camera Angle & Artistic Style.
 
-4.  **Quality and Format Constraints:**
-    *   Be descriptive but **concise**. Aim for a total length of **40 to 80 words**.
-    *   Use natural and evocative language. Avoid raw keyword lists.
-    *   The prompt must be a single string of characters, with no line breaks.
-    *   Produce **only** the final prompt. Do not add any explanation, introduction, commentary, or excuse.
+Visual Translation ("Show, Don't Tell"):
 
-Process the following description:
+Translate abstract concepts, sounds, or emotions (e.g., "silence", "oppressive", "fear") into concrete visual elements (e.g., heavy shadows, isolated framing, cold color palette, rigid posture).
+
+No Weight Tags or AI Jargon:
+
+Do NOT use parentheses, brackets, or numerical weights (e.g., no (subject:1.2) or [dark]).
+
+Rely purely on precise, rich vocabulary to emphasize important elements.
+
+Creative Enrichment:
+
+Inject one or two coherent visual details not present in the original prompt to ground the scene (e.g., a specific texture, dust motes in the light, a weather effect, a reflection). Ensure it perfectly fits the genre (Sci-Fi, Fantasy, Noir, etc.).
+
+Quality & Formatting Constraints:
+
+Total length: 50 to 120 words.
+
+Output must be a single, continuous string of text without line breaks.
+
+CRITICAL: Output ONLY the final prompt. No greetings, no explanations, no quotation marks around the text, and no prefix like "Here is the prompt". Just the raw text.
+
+Process the following inputs:
 {}"""
     return call_llm(prompt_template, base_prompt)
 
