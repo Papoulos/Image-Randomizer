@@ -126,31 +126,30 @@ def call_llm(prompt_template, input_data):
 
 def generate_prompt_only(base_prompt):
     """Generates a detailed prompt without LoRA syntax."""
-    prompt_template = """Vous êtes un expert en création de prompts pour les IA génératives d'images comme Stable Diffusion XL. Votre objectif est de transformer une description de scène simple en un prompt riche, structuré et efficace. Le prompt doit être clair, visuellement évocateur et optimisé pour une génération d'image de haute qualité.
+    prompt_template = """Vous êtes un expert en création de prompts pour les IA génératives d'images comme Stable Diffusion XL et Flux. Votre objectif est de transformer une description de scène simple en un paragraphe descriptif riche, fluide et efficace. Le prompt doit être rédigé sous forme de phrases naturelles, visuellement évocatrices et optimisées pour une génération d'image de haute qualité.
 
 Vous recevrez une description de base contenant des éléments clés (sujet, action, lieu, etc.).
 
 Suivez impérativement ces règles pour créer le prompt final :
 
 1.  **Structure du Prompt :**
-    *   Le prompt final doit être un bloc de texte unique, **en anglais**, composé de segments descriptifs séparés par des virgules. Ne formez pas une seule longue phrase grammaticale.
+    *   Le prompt final doit être un bloc de texte unique, **en anglais**, rédigé sous forme de phrases descriptives fluides.
     *   Organisez le prompt dans cet ordre logique :
-        1.  **Sujet et Action :** Commencez par le sujet principal et son action.
-        2.  **Description Détaillée :** Décrivez les détails importants du sujet (vêtements, apparence, expression).
-        3.  **Décor et Environnement :** Décrivez la scène, l'arrière-plan et les éléments contextuels.
-        4.  **Ambiance et Éclairage :** Ajoutez des mots-clés pour l'ambiance (mood), la lumière (lighting) et la composition.
-        5.  **Style Artistique :** Terminez **toujours** par le style (ex: `photorealistic`, `oil painting`, `anime style`, `cinematic`).
+        1.  **Sujet et Action :** Décrivez le sujet principal en train d'effectuer son action.
+        2.  **Description Détaillée :** Ajoutez des précisions sur le sujet (vêtements, apparence, expression).
+        3.  **Décor et Environnement :** Décrivez le cadre, l'arrière-plan et les éléments contextuels.
+        4.  **Ambiance et Éclairage :** Intégrez l'ambiance (mood), la lumière (lighting) et la composition de la scène.
+        5.  **Style Artistique :** Précisez le style artistique à la fin (ex: `photorealistic`, `oil painting`, `anime style`, `cinematic`).
 
-2.  **Mise en Emphase :**
-    *   Identifiez le **sujet principal** et/ou l'**action clé**. Mettez-le(s) en emphase en l'entourant de parenthèses avec un poids entre `1.4` et `1.6`. N'appliquez ce poids qu'à 1 ou 2 éléments maximum.
-    *   Exemple : `(a beautiful warrior princess:1.5), (fighting a dragon:1.4)`.
+2.  **Pas de Balises de Poids :**
+    *   N'utilisez **absolument aucune parenthèse ni aucun poids numérique** (ex: pas de `:1.5` ou de `(sujet:1.2)`). Utilisez la richesse du vocabulaire pour mettre l'accent sur les éléments importants.
 
 3.  **Enrichissement Créatif :**
-    *   Injectez **un ou deux détails créatifs et cohérents** qui ne sont pas dans la description initiale. Ces ajouts doivent enrichir la scène (ex: un détail sur la météo, un objet en arrière-plan, une texture particulière).
+    *   Injectez **un ou deux détails créatifs et cohérents** qui ne sont pas dans la description initiale pour enrichir la scène (ex: un détail sur la météo, un objet particulier, une texture).
 
 4.  **Contraintes de Qualité et Format :**
     *   Soyez descriptif mais **concis**. Visez une longueur totale de **40 à 80 mots**.
-    *   Utilisez des mots-clés forts et visuels. Évitez les descriptions vagues.
+    *   Utilisez un langage naturel et évocateur. Évitez les listes de mots-clés bruts.
     *   Le prompt doit être une seule chaîne de caractères, sans retour à la ligne.
     *   Ne produisez **que** le prompt final. N'ajoutez aucune explication, introduction, commentaire ou excuse.
 
