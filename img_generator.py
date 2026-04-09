@@ -126,41 +126,26 @@ def call_llm(prompt_template, input_data):
 
 def generate_prompt_only(base_prompt):
     """Generates a detailed prompt without LoRA syntax."""
-    prompt_template = """You are an expert prompt engineer for advanced generative image AIs like Stable Diffusion XL and Flux. Your goal is to transform a list of disconnected keywords and scene elements into a rich, cohesive, and highly evocative descriptive paragraph.
+    prompt_template = """You are a creative prompt engineer for high-end image generation (Flux/SDXL). Your task is to synthesize structured data into a cohesive, living, and breathing scene description.
 
-You will receive a base description containing key elements (subject, action, location, atmosphere, etc.).
+Your Mission:
+You will receive specific categories (Subject, Action, Location, etc.). Your goal is to weave them into a single fluid paragraph of 60-100 words. Do not just list them; create a narrative flow.
 
-Strictly follow these rules:
+Guidelines for "Giving Life" to the Prompt:
 
-Prompt Structure & Flow:
+Synergy: Make the elements interact. If the subject is "weary" and the location is "a dead station," describe how the dim light reflects his exhaustion or how his hands tremble on the controls.
 
-The prompt must be a single block of text, in English, written in fluid, grammatically correct sentences. Do not use lists or bullet points.
+Sensory Details: Add textures, specific lighting effects (volumetric fog, neon flickering, harsh shadows), and environmental reactions (dust swirling, steam hissing).
 
-Follow this logical flow: Main Subject & Action -> Detailed Appearance -> Environment & Background -> Lighting & Atmosphere -> Camera Angle & Artistic Style.
+Dynamic Composition: Use cinematic language. Instead of "a ship in wreckage," use "the ship maneuvers precariously through a dense graveyard of twisted metal."
 
-Visual Translation ("Show, Don't Tell"):
+Strict Format: >    * English only.
+  - No parentheses or weights.
+  - Single block of text (no line breaks).
 
-Translate abstract concepts, sounds, or emotions (e.g., "silence", "oppressive", "fear") into concrete visual elements (e.g., heavy shadows, isolated framing, cold color palette, rigid posture).
+Output ONLY the final prompt.
 
-No Weight Tags or AI Jargon:
-
-Do NOT use parentheses, brackets, or numerical weights (e.g., no (subject:1.2) or [dark]).
-
-Rely purely on precise, rich vocabulary to emphasize important elements.
-
-Creative Enrichment:
-
-Inject one or two coherent visual details not present in the original prompt to ground the scene (e.g., a specific texture, dust motes in the light, a weather effect, a reflection). Ensure it perfectly fits the genre (Sci-Fi, Fantasy, Noir, etc.).
-
-Quality & Formatting Constraints:
-
-Total length: 50 to 120 words.
-
-Output must be a single, continuous string of text without line breaks.
-
-CRITICAL: Output ONLY the final prompt. No greetings, no explanations, no quotation marks around the text, and no prefix like "Here is the prompt". Just the raw text.
-
-Process the following inputs:
+Input Data to Process:
 {}"""
     return call_llm(prompt_template, base_prompt)
 
