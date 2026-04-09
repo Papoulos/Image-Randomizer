@@ -126,35 +126,34 @@ def call_llm(prompt_template, input_data):
 
 def generate_prompt_only(base_prompt):
     """Generates a detailed prompt without LoRA syntax."""
-    prompt_template = """Vous êtes un expert en création de prompts pour les IA génératives d'images comme Stable Diffusion XL. Votre objectif est de transformer une description de scène simple en un prompt riche, structuré et efficace. Le prompt doit être clair, visuellement évocateur et optimisé pour une génération d'image de haute qualité.
+    prompt_template = """You are an expert in creating prompts for generative image AIs like Stable Diffusion XL and Flux. Your goal is to transform a simple scene description into a rich, fluid, and effective descriptive paragraph. The prompt must be written in the form of natural sentences, visually evocative, and optimized for high-quality image generation.
 
-Vous recevrez une description de base contenant des éléments clés (sujet, action, lieu, etc.).
+You will receive a base description containing key elements (subject, action, location, etc.).
 
-Suivez impérativement ces règles pour créer le prompt final :
+You must strictly follow these rules to create the final prompt:
 
-1.  **Structure du Prompt :**
-    *   Le prompt final doit être un bloc de texte unique, **en anglais**, composé de segments descriptifs séparés par des virgules. Ne formez pas une seule longue phrase grammaticale.
-    *   Organisez le prompt dans cet ordre logique :
-        1.  **Sujet et Action :** Commencez par le sujet principal et son action.
-        2.  **Description Détaillée :** Décrivez les détails importants du sujet (vêtements, apparence, expression).
-        3.  **Décor et Environnement :** Décrivez la scène, l'arrière-plan et les éléments contextuels.
-        4.  **Ambiance et Éclairage :** Ajoutez des mots-clés pour l'ambiance (mood), la lumière (lighting) et la composition.
-        5.  **Style Artistique :** Terminez **toujours** par le style (ex: `photorealistic`, `oil painting`, `anime style`, `cinematic`).
+1.  **Prompt Structure:**
+    *   The final prompt must be a single block of text, **in English**, written as fluid descriptive sentences.
+    *   Organize the prompt in this logical order:
+        1.  **Subject and Action:** Describe the main subject performing their action.
+        2.  **Detailed Description:** Add details about the subject (clothing, appearance, expression).
+        3.  **Setting and Environment:** Describe the setting, background, and contextual elements.
+        4.  **Atmosphere and Lighting:** Integrate the mood, lighting, and composition of the scene.
+        5.  **Artistic Style:** Specify the artistic style at the end (e.g., `photorealistic`, `oil painting`, `anime style`, `cinematic`).
 
-2.  **Mise en Emphase :**
-    *   Identifiez le **sujet principal** et/ou l'**action clé**. Mettez-le(s) en emphase en l'entourant de parenthèses avec un poids entre `1.4` et `1.6`. N'appliquez ce poids qu'à 1 ou 2 éléments maximum.
-    *   Exemple : `(a beautiful warrior princess:1.5), (fighting a dragon:1.4)`.
+2.  **No Weight Tags:**
+    *   Do **not use any parentheses or numerical weights** (e.g., no `:1.5` or `(subject:1.2)`). Use rich vocabulary to emphasize important elements.
 
-3.  **Enrichissement Créatif :**
-    *   Injectez **un ou deux détails créatifs et cohérents** qui ne sont pas dans la description initiale. Ces ajouts doivent enrichir la scène (ex: un détail sur la météo, un objet en arrière-plan, une texture particulière).
+3.  **Creative Enrichment:**
+    *   Inject **one or two creative and coherent details** that are not in the initial description to enrich the scene (e.g., a weather detail, a particular object, a texture).
 
-4.  **Contraintes de Qualité et Format :**
-    *   Soyez descriptif mais **concis**. Visez une longueur totale de **40 à 80 mots**.
-    *   Utilisez des mots-clés forts et visuels. Évitez les descriptions vagues.
-    *   Le prompt doit être une seule chaîne de caractères, sans retour à la ligne.
-    *   Ne produisez **que** le prompt final. N'ajoutez aucune explication, introduction, commentaire ou excuse.
+4.  **Quality and Format Constraints:**
+    *   Be descriptive but **concise**. Aim for a total length of **40 to 80 words**.
+    *   Use natural and evocative language. Avoid raw keyword lists.
+    *   The prompt must be a single string of characters, with no line breaks.
+    *   Produce **only** the final prompt. Do not add any explanation, introduction, commentary, or excuse.
 
-Traitez la description suivante :
+Process the following description:
 {}"""
     return call_llm(prompt_template, base_prompt)
 
