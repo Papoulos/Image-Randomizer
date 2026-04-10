@@ -2,6 +2,7 @@ import random
 import requests
 import json
 import time
+import re
 import os
 import psutil
 import subprocess
@@ -66,6 +67,11 @@ def start_ollama():
 # =======================
 # Prompt & LoRA Generation (LLM)
 # =======================
+
+def clean_ansi_codes(text):
+    """Supprime les séquences d'échappement ANSI."""
+    ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+    return ansi_escape.sub('', text)
 
 def call_ollama(prompt):
     """Specific function to call Ollama via CLI."""
@@ -147,7 +153,15 @@ Output ONLY the final prompt.
 
 Input Data to Process:
 {}"""
-    return call_llm(prompt_template, base_prompt)
+    raw_response = call_llm(prompt_template, base_prompt)
+    if not raw_response:
+        return None
+
+    # Clean ANSI codes and newlines
+    clean_prompt = clean_ansi_codes(raw_response)
+    clean_prompt = clean_prompt.replace('\n', ' ').strip()
+
+    return clean_prompt
 
 def select_lora_with_llm(prompt, config):
     """
